@@ -24,7 +24,7 @@ Modulo para la implementacion de las apis de EnvioPack y Pakke
 
     # always loaded
     'data': [
-        # 'security/ir.model.access.csv',
+        'security/ir.model.access.csv',
         'views/views.xml',
         'views/templates.xml',
         'views/views_shipments.xml',

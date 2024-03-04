@@ -6,64 +6,66 @@
             <field name="inherit_id" ref="sale.view_order_form"/>
             <field name="arch" type="xml">
                 <xpath expr="//page[@name='customer_signature']" position="after">
-
+                    
+                    <!-- Para datos de envios y cotizacion-->
                     <page string="Datos de envio" name="shipments_data">
 
                         <notebook>
                             <page string="Datos generales" name="general_data">
                                 <group>
-                                    <field name="CourierCode"/>
-                                    <field name="CourierServiceId"/>
-                                    <field name="ResellerReference"/>
-                                    <field name="CouponCode"/>
-                                    <field name="InsuredAmount"/>
+                                    <field name="courier_code"/>
+                                    <field name="courier_service_id"/>
+                                    <field name="reseller_reference"/>
+                                    <field name="content"/>
+                                    <field name="coupon_code"/>
+                                    <field name="insured_amount"/>
                                 </group>
                             </page>
                             <page string="Dirección de envio" name="address_from">
                                 <group>
-                                    <field name="AddressFrom_ZipCode"/>
-                                    <field name="AddressFrom_State"/>
-                                    <field name="AddressFrom_City"/>
-                                    <field name="AddressFrom_Neighborhood"/>
-                                    <field name="AddressFrom_Address1"/>
-                                    <field name="AddressFrom_Address2"/>
-                                    <field name="AddressFrom_Residential"/>
+                                    <field name="address_from_zipcode"/>
+                                    <field name="address_from_state"/>
+                                    <field name="address_from_city"/>
+                                    <field name="address_from_neighborhood"/>
+                                    <field name="address_from_address1"/>
+                                    <field name="address_from_address2"/>
+                                    <field name="address_from_residential"/>
                                 </group>
                             </page>
                             <page string="Dirección de entrega" name="address_to">
                                 <group>
-                                    <field name="AddressTo_ZipCode"/>
-                                    <field name="AddressTo_State"/>
-                                    <field name="AddressTo_City"/>
-                                    <field name="AddressTo_Neighborhood"/>
-                                    <field name="AddressTo_Address1"/>
-                                    <field name="AddressTo_Address2"/>
-                                    <field name="AddressTo_Residential"/>
+                                    <field name="address_to_zipcode"/>
+                                    <field name="address_to_state"/>
+                                    <field name="address_to_city"/>
+                                    <field name="address_to_neighborhood"/>
+                                    <field name="address_to_address1"/>
+                                    <field name="address_to_address2"/>
+                                    <field name="address_to_residential"/>
                                 </group>
                             </page>
                             <page string="Información del paquete" name="parcel">
                                 <group>
-                                    <field name="Parcel_Length"/>
-                                    <field name="Parcel_Width"/>
-                                    <field name="Parcel_Height"/>
-                                    <field name="Parcel_Weight"/>
+                                    <field name="parcel_length"/>
+                                    <field name="parcel_width"/>
+                                    <field name="parcel_height"/>
+                                    <field name="parcel_weight"/>
                                 </group>
                             </page>
                             <page string="Información del remitente" name="sender">
                                 <group>
-                                    <field name="Sender_Weight"/>
-                                    <field name="Sender_Phone1"/>
-                                    <field name="Sender_Phone2"/>
-                                    <field name="Sender_Phone3"/>
-                                    <field name="Sender_Email"/>
+                                    <field name="sender_weight"/>
+                                    <field name="sender_phone1"/>
+                                    <field name="sender_phone2"/>
+                                    <field name="sender_phone3"/>
+                                    <field name="sender_email"/>
                                 </group>
                             </page>
                             <page string="Información del destinatario" name="recipient">
                                 <group>
-                                    <field name="Recipient_Name"/>
-                                    <field name="Recipient_CompanyName"/>
-                                    <field name="Recipient_Phone1"/>
-                                    <field name="Recipient_Email"/>
+                                    <field name="recipient_name"/>
+                                    <field name="recipient_company_name"/>
+                                    <field name="recipient_phone1"/>
+                                    <field name="recipient_email"/>
                                 </group>
                             </page>
                         </notebook>
@@ -72,6 +74,29 @@
                             <button name="quote" type="object" string="Cotizar" class="oe_highlight mt-2 btn-lg"></button>
                         </div>
 
+                    </page>
+                    
+                    <!-- Para cotizar-->
+                    <page string="Cotizar" name="quote">
+                        <group>
+                            <group string="Mensajeros de Pakke">
+
+                                <field name="id_couriers_selection" string="Selecciona un mensajero"/>
+                            
+                            </group>
+                        </group>
+                            <field name="id_couriers_table" widget="one2many" nolabel="1" string="Tabla de cotización"><!--Para abarque el 100% del ancho, y esto es para el One2many y se muestren los campos que se desean-->
+                                <tree string="Courier">
+                                    <field name="courier_code"/>
+                                    <field name="name"/>
+                                    <field name="courier_service_id"/>
+                                    <field name="delivery_days"/>
+                                    <field name="estimated_delivery_date"/>
+                                    <field name="total_price"/>
+                                </tree>
+                            </field>
+                            <field name="name_orders" invisible="1"/>
+                        
                     </page>
                     
                 </xpath>
