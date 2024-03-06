@@ -28,6 +28,7 @@ Modulo para la implementacion de las apis de EnvioPack y Pakke
         'views/views.xml',
         'views/templates.xml',
         'views/views_shipments.xml',
+        'report/report_guia.xml',
     ],
     # only loaded in demonstration mode
     'demo': [

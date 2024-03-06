@@ -22,4 +22,7 @@ class parcel_pakke(models.Model):
     estimated_delivery_date = fields.Char(string="Fecha estimada de entrega")
     best_option = fields.Char(string="Mejor opción")
     
+    test_pdf = fields.Binary(string="Prueba pdf")
+    
     id_shipments = fields.Many2one("sale.order")
+    

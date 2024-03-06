@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data noupdate="1">
+        <record id="parcel_action" model="ir.actions.report">
+            <field name="name">parcel_report_guide</field>
+            <field name="model">sale.order</field>
+            <field name="report_type">qweb-pdf</field>
+            <field name="report_name">parcel.report_guide</field>
+            <field name="report_file">parcel.report_guide</field>
+            <field name="print_report_name">Guia de envio</field>
+        </record>
+        <report id="parcel.report_id"
+            string="Guia de envio"
+            model="sale.order"
+            report_type="qweb-pdf"
+            name="parcel.report_guide"/>
+        
+        <template id="parcel.report_guide" name="">
+            <t t-call="web.html_container">
+                <t t-call="web.external_layout">
+                    <div class="page" style="font-size:18px">
+                        <div class="row">
+                            <div class="col-md-12" align="center">
+                                <h2>Guia de envio</h2>
+                                <h4>Pruebas<t t-esc="name_order"></t></h4>
+                            </div>
+                        </div>
+                    </div>
+                </t>
+
+            </t>
+        </template>
+    </data>
+</odoo>

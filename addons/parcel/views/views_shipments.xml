@@ -93,10 +93,25 @@
                                     <field name="delivery_days"/>
                                     <field name="estimated_delivery_date"/>
                                     <field name="total_price"/>
+                                    <field name="test_pdf"/>
                                 </tree>
                             </field>
                             <field name="name_orders" invisible="1"/>
+
+                        <div class="text-end">
+                            <button name="pdf_shipping_guide" type="object" string="Generar Guia" class="oe_highlight mt-2 btn-lg"></button>
+                        </div>
                         
+                    </page>
+
+                    <!-- Prueba pdf-->
+                    <page string="PDF" name="pdf">
+                            <field name="test_table_pdf" widget="one2many" nolabel="1" string="Tabla de pruebas"><!--Para abarque el 100% del ancho, y esto es para el One2many y se muestren los campos que se desean-->
+                                <tree string="Test">
+                                    <field name="test_pdf" filename="file_name" widget="binary"/>
+                                    <field name="file_name" invisible="1" string=" "/>
+                                </tree>
+                            </field>
                     </page>
                     
                 </xpath>

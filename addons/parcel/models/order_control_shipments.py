@@ -2,6 +2,8 @@
 
 from odoo import models, fields, api
 import logging
+import base64 #Para los pdf
+from  odoo.exceptions import ValidationError#Para las alertas de usuario
 
 # Define the logger
 _logger = logging.getLogger(__name__)
@@ -55,9 +57,12 @@ class order_control_shipments(models.Model):
     
     #Campos relacionados con quote_couriers
     id_couriers_selection = fields.Many2one("parcel.pakke", string="Selecciona al mensajero", domain="[('name_shipments', '=', name_orders)]")
+    
     id_couriers_table = fields.One2many("parcel.pakke", "id_shipments", string="Tabla de cotización", compute="quote_table")
     
     name_orders = fields.Char(string="Nombre del pedido")#Campo para filtrar por nombre de pedidos
+    
+    test_table_pdf = fields.One2many("parcel.test", "id_shipments", string="Tabla de pdfs")
     
     @api.onchange("name")
     def get_data_shipments(self):#Metodo para obtener los datos que ya estan registrados
@@ -67,8 +72,8 @@ class order_control_shipments(models.Model):
             data.content = data.user_id.name
             
     def quote(self):#Metodo para cotizar la api de pakke
+        
         for quote in self:
-            
             #Almaceno el nombre de cada registro del modelo
             name_shipments = quote.name
             new_quotes = []
@@ -115,7 +120,7 @@ class order_control_shipments(models.Model):
             if new_quotes:  # Si hay nuevas cotizaciones
                 with self.env.cr.savepoint():  # Crea un punto de guardado en la transacción de base de datos actual
                     self.env['parcel.pakke'].create(new_quotes)  # Crea nuevas cotizaciones
-                _logger.info(f"Cotizaciones {new_quotes}")
+                #_logger.info(f"Cotizaciones {new_quotes}")
                 
             quote.name_orders = name_shipments #Para filtrar por el nombre del pedido
 
@@ -126,18 +131,101 @@ class order_control_shipments(models.Model):
             
             name_shipments=quote_many_data.name
         
-            registros_b = self.env['parcel.pakke'].search([('name_shipments', '=', name_shipments)])#Buscar los registros con el nombre del registro del modelo
+            pakkes = self.env['parcel.pakke'].search([('name_shipments', '=', name_shipments)])#Buscar los registros con el nombre del registro del modelo
             
             # Actualiza el campo One2many con los registros obtenidos
-            self.id_couriers_table = [(6, 0, registros_b.ids)]
+            self.id_couriers_table = [(6, 0, pakkes.ids)]
             
             #Colocar los datos del mensajero
             quote_many_data.courier_code = quote_many_data.id_couriers_selection.courier_code
             
             quote_many_data.courier_service_id = quote_many_data.id_couriers_selection.courier_service_id
+            
+            
+    def pdf_shipping_guide(self):
+        
+        if self.id_couriers_selection:#Para validar si se ha seleccionado un mensajer
+        
+            #Crear el registro de la guia
+            
+            #Obtener los datos de la guia
+            
+            #Generar el pdf
+            
+            #Obtener el modelo weather.climate
+            # climate = self.env['weather.climate']
 
-    
-    
-    
+            # #Construir el dominio para la búsqueda en weather.climate
+            # domain = [
+            #             ('name', 'in', list_data)
+            #         ]
+            
+            # #Agregar condición de ubicación si hay selecciones en el many2many
+            # if self.climate_id:
+            #     domain.append(('id', 'in', self.climate_id.ids))
+
+            # #Campos que se recuperarán del modelo weather.climate
+            # climate_fields = [
+            #     'name',
+            #     'temperature',
+            #     'temperature_min',
+            #     'temperature_max',
+            #     'humidity',
+            #     'pressure',
+            #     'date_update',
+            # ]
+            
+            # climate_records = climate.search_read(domain, climate_fields)
+            
+            #Datos a pasar al informe PDF
+            data = {
+                'name_order': self.name,
+            }
+            #_logger.error(f"Imprimiendo{data['name_order']}")
+            
+            #Se obtiene la referencia del reporte
+            xml_id = 'parcel.parcel_action'
+
+            #Se genera el reporte accion
+            action = self.env.ref(xml_id).report_action(self, data=data)
+            
+            #Id del reporte
+            report = self.env.ref('parcel.parcel_action')#Busco el reporte en la base de datos
+            
+            #Renderizo el reporte
+            pdf, _ = self.env['ir.actions.report']._render_qweb_pdf(report.id, data=data)
+            
+            #Codifico el pdf en b64
+            pdf_code = base64.b64encode(pdf)
+            
+            # quote_couriers = self.env['parcel.pakke'].search([('name_shipments', '=', self.name)])
+            
+            # quote_couriers.test_pdf = pdf_code
+
+            #Pruebas
+            
+            self.env['parcel.test'].create({'name': self.name,'file_name': 'Guia_envio.pdf'})#Se necesita tener un registro para asignar algo
+            
+            #Busco el nombre por la relacion que tiene con el registro de pedidos
+            test = self.env['parcel.test'].search([('name', '=', self.name)])
+            
+            #Coloco el pdf en el registro correspondiente
+            test.test_pdf = pdf_code
+                
+            # Actualiza el campo One2many con los registros obtenidos
+            self.test_table_pdf = [(6, 0, test.ids)]
+            
+        else:
+            
+            raise ValidationError(("No haz seleccionado ningun mensajero"))
+        
    
-
+    # def pdf_shipping_guide(self):
+        
+    #     #Crear el registro de la guia
+        
+    #     _logger.info(f"Idddddddddddd {self.id}")
+        
+    #     quote_couriers = self.search([('id', '=', self.id)], limit=1)
+        
+    #     _logger.info(f"Dato {quote_couriers.content}")
