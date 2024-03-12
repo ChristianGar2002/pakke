@@ -16,4 +16,4 @@ class parcel_test(models.Model):
     
     test_pdf = fields.Binary(string="Prueba pdf")
     
-    file_name = fields.Char()#Para el nombre del archivo pdf
+    file_name = fields.Char(default="Guia_envío")#Para el nombre del archivo pdf

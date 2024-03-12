@@ -2,6 +2,7 @@
 
 from odoo import models, fields, api
 import logging
+from  odoo.exceptions import ValidationError#Para las alertas de usuario
 
 # Define the logger
 _logger = logging.getLogger(__name__)
@@ -26,3 +27,15 @@ class parcel_pakke(models.Model):
     
     id_shipments = fields.Many2one("sale.order")
     
+    record_selection = fields.Boolean(default=False)#Para saber si ya un registro fue seleccionado
+    
+    #Metodo para selecionar un registro
+    def couriers_selection(self):
+        for record in self.id_shipments.id_couriers_table:#Primero vuelvo False a todos los registros de la tabla del One2many
+            
+            record.record_selection = False
+        
+        self.record_selection = True #Aqui vuelvo False al registro que seleccione
+        
+        self.id_shipments.id_couriers_selection = self#Y le paso al valor selecionado al many2one
+        

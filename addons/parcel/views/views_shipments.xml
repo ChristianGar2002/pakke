@@ -78,26 +78,33 @@
                     
                     <!-- Para cotizar-->
                     <page string="Cotizar" name="quote">
-                        <group>
+                        <group name="selection_couriers">
                             <group string="Mensajeros de Pakke">
 
-                                <field name="id_couriers_selection" string="Selecciona un mensajero"/>
+                                <field name="id_couriers_selection" string="Mensajero seleccionado"/>
                             
                             </group>
                         </group>
-                            <field name="id_couriers_table" widget="one2many" nolabel="1" string="Tabla de cotización"><!--Para abarque el 100% del ancho, y esto es para el One2many y se muestren los campos que se desean-->
-                                <tree string="Courier">
+                            <field name="id_couriers_table" widget="many2many" nolabel="1" string="Tabla de cotización"><!--Para abarque el 100% del ancho, y esto es para el One2many y se muestren los campos que se desean-->
+                                <tree string="Courier" decoration-warning="record_selection == True">
+                                    <button name="couriers_selection" string="Seleccionar" type="object" class="oe_highlight btn"/>
                                     <field name="courier_code"/>
                                     <field name="name"/>
                                     <field name="courier_service_id"/>
                                     <field name="delivery_days"/>
                                     <field name="estimated_delivery_date"/>
                                     <field name="total_price"/>
-                                    <field name="test_pdf"/>
+                                    <field name="record_selection" invisible="1" string="" class="d-none"/>
                                 </tree>
                             </field>
                             <field name="name_orders" invisible="1"/>
-
+                            <group name="couriers_enviopack">
+                                <group string="Mensajeros de Enviopack" name="couriers_fields_enviopack">
+    
+                                    <!-- <field name="id_couriers_selection" string="Selecciona un mensajero"/> -->
+                                
+                                </group>
+                            </group>
                         <div class="text-end">
                             <button name="pdf_shipping_guide" type="object" string="Generar Guia" class="oe_highlight mt-2 btn-lg"></button>
                         </div>
