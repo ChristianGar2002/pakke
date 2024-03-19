@@ -27,7 +27,7 @@ Modulo para la implementacion de las apis de EnvioPack y Pakke
         'security/ir.model.access.csv',
         'views/views.xml',
         'views/templates.xml',
-        'views/views_shipments.xml',
+        'views/views_shipments_pakke.xml',
         'report/report_guide.xml',
     ],
     # only loaded in demonstration mode

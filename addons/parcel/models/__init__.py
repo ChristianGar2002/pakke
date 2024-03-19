@@ -1,3 +1,3 @@
 # -*- coding: utf-8 -*-
 
-from . import order_control_shipments, parcel_pakke, parcel_test
+from . import order_control_shipments_pakke, parcel_couriers_quote_pakke, parcel_test

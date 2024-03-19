@@ -7,9 +7,9 @@ from  odoo.exceptions import ValidationError#Para las alertas de usuario
 # Define the logger
 _logger = logging.getLogger(__name__)
 
-class parcel_pakke(models.Model):
-    _name= 'parcel.pakke'
-    _description = 'parcel.pakke'
+class parcel_couriers_quote_pakke(models.Model):
+    _name= 'parcel.couriers_quote_pakke'
+    _description = 'parcel.couriers_quote_pakke'
 
     name_shipments = fields.Char(string="Nombre del registro")
     courier_code = fields.Char(string="Codigo de mensajeria")
@@ -21,7 +21,7 @@ class parcel_pakke(models.Model):
     discount_amount = fields.Char(string="Importe de descuento")
     total_price = fields.Char(string="Precio total")
     estimated_delivery_date = fields.Char(string="Fecha estimada de entrega")
-    best_option = fields.Char(string="Mejor opción")
+    best_option = fields.Boolean(string="Mejor opción")
     
     test_pdf = fields.Binary(string="Prueba pdf")
     
@@ -35,7 +35,7 @@ class parcel_pakke(models.Model):
             
             record.record_selection = False
         
-        self.record_selection = True #Aqui vuelvo False al registro que seleccione
+        self.record_selection = True #Aqui vuelvo True al registro que seleccione
         
         self.id_shipments.id_couriers_selection = self#Y le paso al valor selecionado al many2one
         
