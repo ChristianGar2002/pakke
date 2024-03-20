@@ -2,3 +2,5 @@ id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_sale_order,sale.order,model_sale_order,base.group_user,1,1,1,1
 access_parcel_couriers_quote_pakke,parcel.couriers_quote_pakke,model_parcel_couriers_quote_pakke,base.group_user,1,1,1,1
 access_parcel_test,parcel.test,model_parcel_test,base.group_user,1,1,1,1
+access_parcel_package_dimensions,parcel.package_dimensions,model_parcel_package_dimensions,base.group_user,1,1,1,1
+access_parcel_check,parcel.check,model_parcel_check,base.group_user,1,1,1,1

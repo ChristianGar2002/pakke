@@ -16,7 +16,8 @@ class order_control_shipments_pakke(models.Model):
 
     courier_code = fields.Char(string="Codigo de mensajeria", compute="quote_table_data")
     courier_service_id = fields.Char(string="Id del servicio de mensajeria", compute="quote_table_data")
-    reseller_reference = fields.Char(string="Referencia personalizada del paquete")
+    reseller_reference = fields.Char(string="Referencia personalizada del paquete",compute="get_data_shipments", readonly=False)#Para darle valor a los demas campos de manera automatica
+    reseller_reference_parcel = fields.Char(string="Referencia personalizada del paquete", required=True)
     content = fields.Char(string="Contenido del paquete", required=True)
     coupon_code = fields.Char(string="Codigo de cupón")
     insured_amount = fields.Float(string="Valor declarado del paquete", required=True)
@@ -25,60 +26,98 @@ class order_control_shipments_pakke(models.Model):
     address_from_zipcode = fields.Char(string="Código Postal", required=True)
     address_from_state = fields.Char(string="Estado", required=True)
     address_from_city = fields.Char(string="Ciudad", required=True)
-    address_from_neighborhood = fields.Char(string="Vecindario", required=True)
-    address_from_address1 = fields.Char(string="Dirección 1", required=True)
-    address_from_address2 = fields.Char(string="Dirección 2", required=True)
-    address_from_residential = fields.Boolean(string="Residencial", required=True)
+    address_from_neighborhood = fields.Char(string="Vecindario", required=True, help="Colonia")
+    address_from_address1 = fields.Char(string="Dirección", required=True, help="Ingresa calle y número")
+    address_from_address2 = fields.Char(string="Referencias de dirección", required=True, help="Ingresa datos adicionales sobre la dirección (Negocios cercanos, etc)")
+    address_from_residential = fields.Boolean(string="Residencial", required=True, help="Selecciona si es un departamento, condominio, etc...")
     
     #Campos para la parte del Dirección de entrega
     address_to_zipcode = fields.Char(string="Código Postal", required=True)
     address_to_state = fields.Char(string="Estado", required=True)
     address_to_city = fields.Char(string="Ciudad", required=True)
-    address_to_neighborhood = fields.Char(string="Vecindario", required=True)
-    address_to_address1 = fields.Char(string="Dirección 1", required=True)
-    address_to_address2 = fields.Char(string="Dirección 2", required=True)
-    address_to_residential = fields.Boolean(string="Residencial", required=True)
+    address_to_neighborhood = fields.Char(string="Vecindario", required=True, help="Colonia")
+    address_to_address1 = fields.Char(string="Dirección", required=True, help="Ingresa calle y número")
+    address_to_address2 = fields.Char(string="Referencias de dirección", required=True, help="Ingresa datos adicionales sobre la dirección (Negocios cercanos, etc)")
+    address_to_residential = fields.Boolean(string="Residencial", required=True, help="Selecciona si es un departamento, condominio, etc...")
     
     #Campos para la parte del paquete
-    parcel_length = fields.Integer(string="Longitud", required=True)
-    parcel_width = fields.Integer(string="Ancho", required=True)
-    parcel_height = fields.Integer(string="Altura", required=True)
-    parcel_weight = fields.Integer(string="Peso", required=True)
+    parcel_length = fields.Integer(string="Longitud (cm)", required=True, default=1)
+    parcel_width = fields.Integer(string="Ancho (cm)", required=True, default=1)
+    parcel_height = fields.Integer(string="Altura (cm)", required=True, default=1)
+    parcel_weight = fields.Integer(string="Peso (kg)", required=True, default=1)
     
     #Campos para la parte del remitente
     sender_name = fields.Char(string="Nombre", required=True)
-    sender_phone1 = fields.Char(string="Telefono 1", required=True)
-    sender_phone2 = fields.Char(string="Telefono 2", required=True)
-    sender_phone3 = fields.Char(string="Telefono 3", required=True)
+    sender_phone1 = fields.Char(string="Telefono", required=True)
+    sender_phone2 = fields.Char(string="Telefono adicional", required=True)
     sender_email = fields.Char(string="Correo electronico", required=True)
     
     #Campos para la parte del destinatario
     recipient_name = fields.Char(string="Nombre", required=True)
     recipient_company_name = fields.Char(string="Nombre de la empresa", required=True)
-    recipient_phone1 = fields.Char(string="Telefono 1", required=True)
+    recipient_phone1 = fields.Char(string="Telefono", required=True)
     recipient_email = fields.Char(string="Correo electronico", required=True)
     
     #Campos relacionados con quote_couriers
     id_couriers_selection = fields.Many2one("parcel.couriers_quote_pakke", string="Selecciona al mensajero", domain="[('name_shipments', '=', name_orders)]")
-    
     id_couriers_table = fields.One2many("parcel.couriers_quote_pakke", "id_shipments", string="Tabla de cotización")
-    
     name_orders = fields.Char(string="Nombre del pedido")#Campo para filtrar por nombre de pedidos
-    
     test_table_pdf = fields.One2many("parcel.test", "id_shipments", string="Tabla de pdfs")
     
+    #Credencial oficial de la api de PAKKE
     api_key_pakke = fields.Char(string="Api", compute="get_data_shipments")
+    
+    #Campos relacionados package_dimensions
+    id_packages = fields.Many2one("parcel.package_dimensions", string="Selecciona una medida de packete")
     
     @api.onchange("name")
     def get_data_shipments(self):#Metodo para obtener los datos que ya estan registrados
+        if not self.env['parcel.check'].search([('name', '=', self.name)], limit=1):#Busco si el registro actual de sale.order ya esta registrado    
+            self.reseller_reference_parcel = self.partner_id.name
+            self.content = self.user_id.name
+            self.coupon_code = self.team_id.name
+
+            self.env['parcel.check'].create({'name': self.name})#Si no esta lo creo
         
-        for data in self:
+        self.api_key_pakke = "0XSyUfbeuEGWjOmKjRHHeNBE4H41gPI4bD3zlL51zK47bbcruKzRRX9t3m44sWYp"
             
-            # data.content = data.user_id.name
+        self.data_package_dimension()
+    
+    
+    def data_package_dimension(self):#Metodo para registrar medidas estandar de packetes
+        
+        new_dimension = []
+        dimensions = [{'name':'Pequeño (25x15x5)', 'length':25, 'width':15, 'height':5}, {'name':'Mediano (40x30x20)', 'length':40, 'width':30, 'height':20}, {'name':'Grande (55x45x35)', 'length':55, 'width':45, 'height':35}]
+        
+        for dimension in dimensions:#Recorro la lista de las medidas estandar para capturar los datos
             
-            data.api_key_pakke = ""
+            dimension_name=dimension['name']
+            dimension_length=dimension['length']
+            dimension_width=dimension['width']
+            dimension_height=dimension['height']
             
+            search_dimension = self.env['parcel.package_dimensions'].search([('name', '=', dimension_name), ('length', '=', dimension_length), ('width', '=', dimension_width), ('height', '=', dimension_height)], limit=1)#Busco para saber si existe un registro ya
             
+            if not search_dimension:  # Si la medida no existe
+                new_dimension.append({  # Agrego la nueva medida a la lista
+                    'name': dimension_name,
+                    'length': dimension_length,
+                    'width': dimension_width,
+                    'height': dimension_height,
+                })
+                
+        if new_dimension:  # Si hay nuevas medidas
+            with self.env.cr.savepoint():  # Crea un punto de guardado en la transacción de base de datos actual, ayuda a que si hay un error no realize nada para tener consistencia de datos
+                self.env['parcel.package_dimensions'].create(new_dimension)  # Crea nuevas medidas
+
+      
+    @api.onchange("id_packages")
+    def data_dimensions_parcel(self):
+        
+        self.parcel_length = self.id_packages.length
+        self.parcel_width = self.id_packages.width
+        self.parcel_height = self.id_packages.height
+        
     @api.onchange("id_couriers_selection")#Para actualizar el campo id_couriers_table si se elije directamente el courier desde el campo id_courier_selection
     def couriers_selection_reverse(self):
         
@@ -94,7 +133,6 @@ class order_control_shipments_pakke(models.Model):
    
         
     def quote(self):#Metodo para cotizar la api de pakke
-        
         #Almaceno el nombre de cada registro del modelo
         name_shipments = self.name
         new_quotes = []
@@ -193,30 +231,45 @@ class order_control_shipments_pakke(models.Model):
             quote_many_data.courier_service_id = quote_many_data.id_couriers_selection.courier_service_id
         
             
-    def pdf_shipping_guide(self):
+    def pdf_shipping_guide(self):#Metodo para generar la guia de envio en pdf
         
         if self.id_couriers_selection:#Para validar si se ha seleccionado un mensajero
             #Creación de la guia de envio
             
-            ShipmentId = self.create_shipping_guide()
+            # ShipmentId = self.create_shipping_guide()
             
-            #Obtener el pdf de la guia codificado en b64
+            # #Obtener el pdf de la guia codificado en b64
             
-            data_pdf_shipping_guide = self.get_data_shipping_guide(ShipmentId)
+            # data_pdf_shipping_guide = self.get_data_shipping_guide(ShipmentId)
+            
+            #Datos a pasar al informe PDF
+            data = {
+                'name_order': self.name,
+            }
+            #_logger.error(f"Imprimiendo{data['name_order']}")
+            
+            #Se obtiene la referencia del reporte
+            xml_id = 'parcel.parcel_action'
 
-            #PDF
+            #Se genera el reporte accion
+            action = self.env.ref(xml_id).report_action(self, data=data)
             
-            self.env['parcel.test'].create({'name': self.name,'file_name': 'Guia_envio.pdf'})#Se necesita tener un registro para asignar algo
+            #Id del reporte
+            report = self.env.ref('parcel.parcel_action')#Busco el reporte en la base de datos
             
-            #Busco el nombre por la relacion que tiene con el registro de pedidos
-            test = self.env['parcel.test'].search([('name', '=', self.name)])
+            #Renderizo el reporte
+            pdf, _ = self.env['ir.actions.report']._render_qweb_pdf(report.id, data=data)
             
-            #Coloco el pdf en el registro correspondiente
-            test.test_pdf = data_pdf_shipping_guide
+            #Codifico el pdf en b64
+            pdf_code = base64.b64encode(pdf)
+            
+            quote_couriers = self.env['parcel.couriers_quote_pakke'].search([('name_shipments', '=', self.name)])
+            
+            quote_couriers.test_pdf = pdf_code
                 
             # Actualiza el campo One2many con los registros obtenidos
             self.test_table_pdf = [(6, 0, test.ids)]
-            
+        
         else:
             
             raise ValidationError(("No haz seleccionado ningun mensajero"))
@@ -234,7 +287,7 @@ class order_control_shipments_pakke(models.Model):
         body = {
             "CourierCode": self.courier_code,
             "CourierServiceId": self.courier_service_id,
-            "ResellerReference": self.reseller_reference,
+            "ResellerReference": self.reseller_reference_parcel,
             "Content": self.content,
             "AddressFrom": {
                 "ZipCode": self.address_from_zipcode,
@@ -302,8 +355,6 @@ class order_control_shipments_pakke(models.Model):
         
         return data_pdf_shipping_guide['data']
    
-   
-
        
     # def pdf_shipping_guide(self):
         

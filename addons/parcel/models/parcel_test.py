@@ -14,6 +14,6 @@ class parcel_test(models.Model):
     
     id_shipments = fields.Many2one("sale.order")
     
-    test_pdf = fields.Binary(string="Prueba pdf")
+    test_pdf = fields.Binary(string="Guía de envio")
     
     file_name = fields.Char(default="Guia_envío")#Para el nombre del archivo pdf

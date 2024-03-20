@@ -15,57 +15,58 @@
                                 <group>
                                     <field name="courier_code"/>
                                     <field name="courier_service_id"/>
-                                    <field name="reseller_reference"/>
+                                    <field name="reseller_reference" invisible="1"/>
+                                    <field name="reseller_reference_parcel"/>
                                     <field name="content"/>
                                     <field name="coupon_code"/>
                                     <field name="insured_amount"/>
                                 </group>
                             </page>
-                            <page string="Dirección de envio" name="address_from">
-                                <group>
-                                    <field name="address_from_zipcode"/>
-                                    <field name="address_from_state"/>
-                                    <field name="address_from_city"/>
-                                    <field name="address_from_neighborhood"/>
-                                    <field name="address_from_address1"/>
-                                    <field name="address_from_address2"/>
-                                    <field name="address_from_residential"/>
+                            <page string="Datos de envio" name="shipping_information">
+                                <group name="address_from_parcel">
+                                    <group string="Dirección de envio" name="address_from">
+                                        <field name="address_from_zipcode"/>
+                                        <field name="address_from_state"/>
+                                        <field name="address_from_city"/>
+                                        <field name="address_from_neighborhood"/>
+                                        <field name="address_from_address1"/>
+                                        <field name="address_from_address2"/>
+                                        <field name="address_from_residential"/>
+                                    </group>
+                                    <group string="Información del remitente" name="sender">
+                                        <field name="sender_name"/>
+                                        <field name="sender_phone1"/>
+                                        <field name="sender_phone2"/>
+                                        <field name="sender_email"/>
+                                    </group>
                                 </group>
                             </page>
-                            <page string="Dirección de entrega" name="address_to">
-                                <group>
-                                    <field name="address_to_zipcode"/>
-                                    <field name="address_to_state"/>
-                                    <field name="address_to_city"/>
-                                    <field name="address_to_neighborhood"/>
-                                    <field name="address_to_address1"/>
-                                    <field name="address_to_address2"/>
-                                    <field name="address_to_residential"/>
+                            <page string="Datos de entrega" name="delivery_data">
+                                <group name="address_to_parcel">
+                                    <group string="Dirección de entrega" name="address_to">
+                                        <field name="address_to_zipcode"/>
+                                        <field name="address_to_state"/>
+                                        <field name="address_to_city"/>
+                                        <field name="address_to_neighborhood"/>
+                                        <field name="address_to_address1"/>
+                                        <field name="address_to_address2"/>
+                                        <field name="address_to_residential"/>
+                                    </group>
+                                    <group string="Información del destinatario" name="recipient">
+                                        <field name="recipient_name"/>
+                                        <field name="recipient_company_name"/>
+                                        <field name="recipient_phone1"/>
+                                        <field name="recipient_email"/>
+                                    </group>
                                 </group>
                             </page>
                             <page string="Información del paquete" name="parcel">
-                                <group>
+                                <group name="parcel_dimensions">
+                                    <field name="id_packages"/>
                                     <field name="parcel_length"/>
                                     <field name="parcel_width"/>
                                     <field name="parcel_height"/>
                                     <field name="parcel_weight"/>
-                                </group>
-                            </page>
-                            <page string="Información del remitente" name="sender">
-                                <group>
-                                    <field name="sender_name"/>
-                                    <field name="sender_phone1"/>
-                                    <field name="sender_phone2"/>
-                                    <field name="sender_phone3"/>
-                                    <field name="sender_email"/>
-                                </group>
-                            </page>
-                            <page string="Información del destinatario" name="recipient">
-                                <group>
-                                    <field name="recipient_name"/>
-                                    <field name="recipient_company_name"/>
-                                    <field name="recipient_phone1"/>
-                                    <field name="recipient_email"/>
                                 </group>
                             </page>
                         </notebook>
@@ -79,7 +80,7 @@
                     <!-- Para cotizar-->
                     <page string="Cotizar" name="quote">
                         <group name="selection_couriers">
-                            <group string="Mensajeros de Pakke">
+                            <group string="Mensajeros de Pakke" name="pakke_messengers">
 
                                 <field name="id_couriers_selection" string="Mensajero seleccionado"/>
                             
@@ -113,12 +114,12 @@
 
                     <!-- Prueba pdf-->
                     <page string="PDF" name="pdf">
-                            <field name="test_table_pdf" widget="one2many" nolabel="1" string="Tabla de pruebas"><!--Para abarque el 100% del ancho, y esto es para el One2many y se muestren los campos que se desean-->
-                                <tree string="Test">
-                                    <field name="test_pdf" filename="file_name" widget="binary"/>
-                                    <field name="file_name" invisible="1" string=" "/>
-                                </tree>
-                            </field>
+                        <field name="test_table_pdf" widget="one2many" nolabel="1" string="Tabla de pruebas"><!--Para abarque el 100% del ancho, y esto es para el One2many y se muestren los campos que se desean-->
+                            <tree string="Test">
+                                <field name="test_pdf" filename="file_name" widget="binary"/>
+                                <field name="file_name" invisible="1" string=" "/>
+                            </tree>
+                        </field>
                     </page>
                     
                 </xpath>
