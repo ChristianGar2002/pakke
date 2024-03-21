@@ -3,7 +3,7 @@
 from odoo import models, fields, api
 import logging
 import base64 #Para los pdf
-from  odoo.exceptions import ValidationError#Para las alertas de usuario
+from odoo.exceptions import ValidationError#Para las alertas de usuario
 #Para hacer peticiones
 import requests
 import json
@@ -20,7 +20,7 @@ class order_control_shipments_pakke(models.Model):
     reseller_reference_parcel = fields.Char(string="Referencia personalizada del paquete", required=True)
     content = fields.Char(string="Contenido del paquete", required=True)
     coupon_code = fields.Char(string="Codigo de cupón")
-    insured_amount = fields.Float(string="Valor declarado del paquete", required=True)
+    insured_amount = fields.Float(string="Valor declarado del paquete", required=True, help="Precio del contenido del paquete")
     
     #Campos para la parte del Dirección​ ​de​ ​Envío
     address_from_zipcode = fields.Char(string="Código Postal", required=True)
@@ -70,8 +70,28 @@ class order_control_shipments_pakke(models.Model):
     #Campos relacionados package_dimensions
     id_packages = fields.Many2one("parcel.package_dimensions", string="Selecciona una medida de packete")
     
+    #Campo para validar si ya se realizo la guia de envio
+    validation_guide = fields.Boolean(default=False)
+    
+    @api.onchange("sender_phone1", "sender_phone2", "recipient_phone1")
+    def validation_number(self):#Funcion para validar que los campos de telefono solo se han numericos
+        
+        for field_number in self:
+            
+            if field_number.sender_phone1 and not field_number.sender_phone1.isdigit():
+                
+                raise ValidationError(("El campo 'Telefono' del remitente es de solo números"))
+            
+            elif field_number.sender_phone2 and not field_number.sender_phone2.isdigit():
+                
+                raise ValidationError(("El campo 'Telefono adicional' del remitente es de solo números"))
+            
+            elif field_number.recipient_phone1 and not field_number.recipient_phone1.isdigit():
+                
+                raise ValidationError(("El campo 'Telefono' del destinatario es de solo números"))
+    
     @api.onchange("name")
-    def get_data_shipments(self):#Metodo para obtener los datos que ya estan registrados
+    def get_data_shipments(self):#Funcion para obtener los datos que ya estan registrados
         if not self.env['parcel.check'].search([('name', '=', self.name)], limit=1):#Busco si el registro actual de sale.order ya esta registrado    
             self.reseller_reference_parcel = self.partner_id.name
             self.content = self.user_id.name
@@ -83,8 +103,7 @@ class order_control_shipments_pakke(models.Model):
             
         self.data_package_dimension()
     
-    
-    def data_package_dimension(self):#Metodo para registrar medidas estandar de packetes
+    def data_package_dimension(self):#Funcion para registrar medidas estandar de packetes
         
         new_dimension = []
         dimensions = [{'name':'Pequeño (25x15x5)', 'length':25, 'width':15, 'height':5}, {'name':'Mediano (40x30x20)', 'length':40, 'width':30, 'height':20}, {'name':'Grande (55x45x35)', 'length':55, 'width':45, 'height':35}]
@@ -110,29 +129,28 @@ class order_control_shipments_pakke(models.Model):
             with self.env.cr.savepoint():  # Crea un punto de guardado en la transacción de base de datos actual, ayuda a que si hay un error no realize nada para tener consistencia de datos
                 self.env['parcel.package_dimensions'].create(new_dimension)  # Crea nuevas medidas
 
-      
     @api.onchange("id_packages")
-    def data_dimensions_parcel(self):
+    def data_dimensions_parcel(self):#Funcion que coloca los datos cuando se selecciona una medida de id_packages
         
         self.parcel_length = self.id_packages.length
         self.parcel_width = self.id_packages.width
         self.parcel_height = self.id_packages.height
         
-    @api.onchange("id_couriers_selection")#Para actualizar el campo id_couriers_table si se elije directamente el courier desde el campo id_courier_selection
-    def couriers_selection_reverse(self):
+    @api.onchange("id_couriers_selection")
+    def couriers_selection_reverse(self):#Funcion para actualizar el campo id_couriers_table si se elije directamente el courier desde el campo id_courier_selection
         
         id_courier_selection = (f"NewId_{self.id_couriers_selection.id}")#Convierto en string el id del registro actual del id_couriers_selection
         
-        for record in self.id_couriers_table:#Recorro cada registro del One2many del id_couriers_table
+        for record_quote in self.id_couriers_table:#Recorro cada registro del One2many del id_couriers_table
             
-            record.record_selection = False#Vuelvo False a todos los record_selection del id_couriers_table
+            record_quote.record_selection = False#Vuelvo False a todos los record_selection del id_couriers_table
             
-            if id_courier_selection == f"{record.id}":#Busco si el registro seleccionado del id_couriers_selection es igual al que esta en el One2many de id_couriers_table
+            if id_courier_selection == f"{record_quote.id}":#Busco si el registro seleccionado del id_couriers_selection es igual al que esta en el One2many de id_couriers_table
                 
-                record.record_selection = True#Si es asi, le coloco True al record_selection del registro pertinente del campo One2many de id_couriers_table
+                record_quote.record_selection = True#Si es asi, le coloco True al record_selection del registro pertinente del campo One2many de id_couriers_table
    
         
-    def quote(self):#Metodo para cotizar la api de pakke
+    def quote(self):#Funcion para cotizar la api de pakke
         #Almaceno el nombre de cada registro del modelo
         name_shipments = self.name
         new_quotes = []
@@ -212,9 +230,10 @@ class order_control_shipments_pakke(models.Model):
             
         self.name_orders = name_shipments #Para filtrar por el nombre del pedido
 
+        self.message_post(body="Cotización realizada exitosamente", subject="Aviso")
 
     @api.onchange("id_couriers_selection")
-    def quote_table_data(self):#Para colocar la información en el One2many y del mensajero que se elija
+    def quote_table_data(self):#Funcion para colocar la información en el One2many y del mensajero que se elija
         
         for quote_many_data in self:
             
@@ -231,7 +250,7 @@ class order_control_shipments_pakke(models.Model):
             quote_many_data.courier_service_id = quote_many_data.id_couriers_selection.courier_service_id
         
             
-    def pdf_shipping_guide(self):#Metodo para generar la guia de envio en pdf
+    def pdf_shipping_guide(self):#Funcion para generar la guia de envio en pdf
         
         if self.id_couriers_selection:#Para validar si se ha seleccionado un mensajero
             #Creación de la guia de envio
@@ -263,19 +282,31 @@ class order_control_shipments_pakke(models.Model):
             #Codifico el pdf en b64
             pdf_code = base64.b64encode(pdf)
             
-            quote_couriers = self.env['parcel.couriers_quote_pakke'].search([('name_shipments', '=', self.name)])
+            self.env['parcel.test'].create({'name': self.name, 'test_pdf': pdf_code, 'file_name':f"Guia_envio_{self.name}.pdf"})
             
-            quote_couriers.test_pdf = pdf_code
+            test = self.env['parcel.test'].search([('name', '=', self.name)])
                 
             # Actualiza el campo One2many con los registros obtenidos
             self.test_table_pdf = [(6, 0, test.ids)]
         
+            self.message_post(body="Guia de envio generada exitosamente", subject="Aviso")
+            
+            #Para verificar si el proceso de guia de envio ha sido realizado con exito
+            
+            id_courier_selection = (f"NewId_{self.id_couriers_selection.id}")#Convierto en string el id del registro actual del id_couriers_selection
+        
+            for record_guide in self.id_couriers_table:#Recorro cada registro del One2many del id_couriers_table
+                
+                record_guide.validation_guide = True#Vuelvo False a todos los record_selection del id_couriers_table
+            
+            self.validation_guide = True
+            
         else:
             
             raise ValidationError(("No haz seleccionado ningun mensajero"))
         
         
-    def create_shipping_guide(self):#Para crear la guia de envio
+    def create_shipping_guide(self):#Funcion ara crear la guia de envio
         
         url = "https://seller.pakke.mx/api/v1/Shipments"#Endpoint para generar envios
         
@@ -339,7 +370,7 @@ class order_control_shipments_pakke(models.Model):
         return ShipmentId['ShipmentId']#Obtengo el id del envio
             
     
-    def get_data_shipping_guide(self, ShipmentId):#Para obtener la gui de envio
+    def get_data_shipping_guide(self, ShipmentId):#Funcion para obtener la gui de envio
         
         url = f"https://seller.pakke.mx/api/v1/Shipments/{ShipmentId}/label"  # URL de la etiqueta de guia
         headers = {
@@ -356,12 +387,3 @@ class order_control_shipments_pakke(models.Model):
         return data_pdf_shipping_guide['data']
    
        
-    # def pdf_shipping_guide(self):
-        
-    #     #Crear el registro de la guia
-        
-    #     _logger.info(f"Idddddddddddd {self.id}")
-        
-    #     quote_couriers = self.search([('id', '=', self.id)], limit=1)
-        
-    #     _logger.info(f"Dato {quote_couriers.content}")

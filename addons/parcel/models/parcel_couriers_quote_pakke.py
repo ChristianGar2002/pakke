@@ -11,6 +11,7 @@ class parcel_couriers_quote_pakke(models.Model):
     _name= 'parcel.couriers_quote_pakke'
     _description = 'parcel.couriers_quote_pakke'
 
+    #Campos para la cotizacion de la api de pakke
     name_shipments = fields.Char(string="Nombre del registro")
     courier_code = fields.Char(string="Codigo de mensajeria")
     name = fields.Char(string="Nombre de mensajeria")
@@ -23,13 +24,13 @@ class parcel_couriers_quote_pakke(models.Model):
     estimated_delivery_date = fields.Char(string="Fecha estimada de entrega")
     best_option = fields.Boolean(string="Mejor opción")
     
-    test_pdf = fields.Binary(string="Prueba pdf")
-    
     id_shipments = fields.Many2one("sale.order")
     
     record_selection = fields.Boolean(default=False)#Para saber si ya un registro fue seleccionado
     
-    #Metodo para selecionar un registro
+    validation_guide = fields.Boolean(default=False)#Para validar si ya se realizo la guia de envio
+    
+    #Funcion para selecionar un registro
     def couriers_selection(self):
         for record in self.id_shipments.id_couriers_table:#Primero vuelvo False a todos los registros de la tabla del One2many
             

@@ -16,63 +16,65 @@
                                     <field name="courier_code"/>
                                     <field name="courier_service_id"/>
                                     <field name="reseller_reference" invisible="1"/>
-                                    <field name="reseller_reference_parcel"/>
-                                    <field name="content"/>
-                                    <field name="coupon_code"/>
-                                    <field name="insured_amount"/>
+                                    <field name="reseller_reference_parcel" readonly="validation_guide"/>
+                                    <field name="content" readonly="validation_guide"/>
+                                    <field name="coupon_code" readonly="validation_guide"/>
+                                    <field name="insured_amount" readonly="validation_guide"/>
                                 </group>
                             </page>
                             <page string="Datos de envio" name="shipping_information">
                                 <group name="address_from_parcel">
                                     <group string="Dirección de envio" name="address_from">
-                                        <field name="address_from_zipcode"/>
-                                        <field name="address_from_state"/>
-                                        <field name="address_from_city"/>
-                                        <field name="address_from_neighborhood"/>
-                                        <field name="address_from_address1"/>
-                                        <field name="address_from_address2"/>
-                                        <field name="address_from_residential"/>
+                                        <field name="address_from_zipcode" readonly="validation_guide"/>
+                                        <field name="address_from_state" readonly="validation_guide"/>
+                                        <field name="address_from_city" readonly="validation_guide"/>
+                                        <field name="address_from_neighborhood" readonly="validation_guide"/>
+                                        <field name="address_from_address1" readonly="validation_guide"/>
+                                        <field name="address_from_address2" readonly="validation_guide"/>
+                                        <field name="address_from_residential" readonly="validation_guide"/>
                                     </group>
                                     <group string="Información del remitente" name="sender">
-                                        <field name="sender_name"/>
-                                        <field name="sender_phone1"/>
-                                        <field name="sender_phone2"/>
-                                        <field name="sender_email"/>
+                                        <field name="sender_name" readonly="validation_guide"/>
+                                        <field name="sender_phone1" readonly="validation_guide"/>
+                                        <field name="sender_phone2" readonly="validation_guide"/>
+                                        <field name="sender_email" readonly="validation_guide"/>
                                     </group>
                                 </group>
                             </page>
                             <page string="Datos de entrega" name="delivery_data">
                                 <group name="address_to_parcel">
                                     <group string="Dirección de entrega" name="address_to">
-                                        <field name="address_to_zipcode"/>
-                                        <field name="address_to_state"/>
-                                        <field name="address_to_city"/>
-                                        <field name="address_to_neighborhood"/>
-                                        <field name="address_to_address1"/>
-                                        <field name="address_to_address2"/>
-                                        <field name="address_to_residential"/>
+                                        <field name="address_to_zipcode" readonly="validation_guide"/>
+                                        <field name="address_to_state" readonly="validation_guide"/>
+                                        <field name="address_to_city" readonly="validation_guide"/>
+                                        <field name="address_to_neighborhood" readonly="validation_guide"/>
+                                        <field name="address_to_address1" readonly="validation_guide"/>
+                                        <field name="address_to_address2" readonly="validation_guide"/>
+                                        <field name="address_to_residential" readonly="validation_guide"/>
                                     </group>
                                     <group string="Información del destinatario" name="recipient">
-                                        <field name="recipient_name"/>
-                                        <field name="recipient_company_name"/>
-                                        <field name="recipient_phone1"/>
-                                        <field name="recipient_email"/>
+                                        <field name="recipient_name" readonly="validation_guide"/>
+                                        <field name="recipient_company_name" readonly="validation_guide"/>
+                                        <field name="recipient_phone1" readonly="validation_guide"/>
+                                        <field name="recipient_email" readonly="validation_guide"/>
                                     </group>
                                 </group>
                             </page>
                             <page string="Información del paquete" name="parcel">
                                 <group name="parcel_dimensions">
-                                    <field name="id_packages"/>
-                                    <field name="parcel_length"/>
-                                    <field name="parcel_width"/>
-                                    <field name="parcel_height"/>
-                                    <field name="parcel_weight"/>
+                                    <field name="id_packages" readonly="validation_guide"/>
+                                    <field name="parcel_length" readonly="validation_guide"/>
+                                    <field name="parcel_width" readonly="validation_guide"/>
+                                    <field name="parcel_height" readonly="validation_guide"/>
+                                    <field name="parcel_weight" readonly="validation_guide"/>
                                 </group>
                             </page>
+                            <field name="validation_guide" invisible="1"/>
                         </notebook>
 
                         <div class="text-end">
-                            <button name="quote" type="object" string="Cotizar" class="oe_highlight mt-2 btn-lg"></button>
+                            <button name="quote" invisible="validation_guide" type="object" string="Cotizar" class="oe_highlight mt-2 btn-lg"></button>
+                            <field name="validation_guide" invisible="1"/>
                         </div>
 
                     </page>
@@ -82,13 +84,13 @@
                         <group name="selection_couriers">
                             <group string="Mensajeros de Pakke" name="pakke_messengers">
 
-                                <field name="id_couriers_selection" string="Mensajero seleccionado"/>
-                            
+                                <field name="id_couriers_selection" readonly="validation_guide" string="Mensajero seleccionado"/>
+                                <field name="validation_guide" invisible="1"/>
                             </group>
                         </group>
                             <field name="id_couriers_table" widget="one2many" nolabel="1" string="Tabla de cotización"><!--Para abarque el 100% del ancho, y esto es para el One2many y se muestren los campos que se desean-->
                                 <tree string="Courier" decoration-warning="record_selection == True" decoration-bf="record_selection == True" editable="bottom" delete="false">
-                                    <button name="couriers_selection" string="Seleccionar" type="object" class="oe_highlight btn"/>
+                                    <button name="couriers_selection" invisible="validation_guide" string="Seleccionar" type="object" class="oe_highlight btn"/>
                                     <field name="courier_code"/>
                                     <field name="name"/>
                                     <field name="courier_service_id"/>
@@ -96,6 +98,7 @@
                                     <field name="estimated_delivery_date"/>
                                     <field name="total_price"/>
                                     <field name="record_selection" invisible="1" string="" class="d-none"/>
+                                    <field name="validation_guide" invisible="1" string="" class="d-none"/>
                                 </tree>
                             </field>
                             <field name="name_orders" invisible="1"/>
@@ -107,7 +110,8 @@
                                 </group>
                             </group>
                         <div class="text-end">
-                            <button name="pdf_shipping_guide" type="object" string="Generar Guia" class="oe_highlight mt-2 btn-lg"></button>
+                            <button name="pdf_shipping_guide" invisible="validation_guide" type="object" string="Generar Guia" class="oe_highlight mt-2 btn-lg"></button>
+                            <field name="validation_guide" invisible="1"/>
                         </div>
                         
                     </page>
