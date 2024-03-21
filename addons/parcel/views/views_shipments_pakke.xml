@@ -88,7 +88,7 @@
                                 <field name="validation_guide" invisible="1"/>
                             </group>
                         </group>
-                            <field name="id_couriers_table" widget="one2many" nolabel="1" string="Tabla de cotización"><!--Para abarque el 100% del ancho, y esto es para el One2many y se muestren los campos que se desean-->
+                            <field name="id_couriers_table" readonly="validation_guide" widget="one2many" nolabel="1" string="Tabla de cotización"><!--Para abarque el 100% del ancho, y esto es para el One2many y se muestren los campos que se desean-->
                                 <tree string="Courier" decoration-warning="record_selection == True" decoration-bf="record_selection == True" editable="bottom" delete="false">
                                     <button name="couriers_selection" invisible="validation_guide" string="Seleccionar" type="object" class="oe_highlight btn"/>
                                     <field name="courier_code"/>

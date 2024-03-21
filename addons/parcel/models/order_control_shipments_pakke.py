@@ -68,7 +68,7 @@ class order_control_shipments_pakke(models.Model):
     api_key_pakke = fields.Char(string="Api", compute="get_data_shipments")
     
     #Campos relacionados package_dimensions
-    id_packages = fields.Many2one("parcel.package_dimensions", string="Selecciona una medida de packete")
+    id_packages = fields.Many2one("parcel.package_dimensions", string="Selecciona una medida de paquete")
     
     #Campo para validar si ya se realizo la guia de envio
     validation_guide = fields.Boolean(default=False)
@@ -102,6 +102,11 @@ class order_control_shipments_pakke(models.Model):
         self.api_key_pakke = "0XSyUfbeuEGWjOmKjRHHeNBE4H41gPI4bD3zlL51zK47bbcruKzRRX9t3m44sWYp"
             
         self.data_package_dimension()
+        
+    @api.onchange("partner_id")
+    def get_data_shipments_update(self):#Funcion para actualizar los datos obtenidos
+        
+        self.reseller_reference_parcel = self.partner_id.name
     
     def data_package_dimension(self):#Funcion para registrar medidas estandar de packetes
         
@@ -174,60 +179,64 @@ class order_control_shipments_pakke(models.Model):
                 "CouponCode": self.coupon_code,
                 "InsuredAmount": self.insured_amount
             }
-
-        json_body = json.dumps(body)#Se convierte a json
-
-        #Se realiza la petición
-        response = requests.post(url, headers=headers, data=json_body)
         
-        #Si la petición es correcta
+        try:
+            json_body = json.dumps(body)#Se convierte a json
+
+            #Se realiza la petición
+            response = requests.post(url, headers=headers, data=json_body)
             
-        quotes_data = response.json()#Obtengo la respuesta de la peticion
-        _logger.info(f"Cotizaciones {quotes_data}")
-        #Obtengo los datos de la api
-        # quotes_data = [{'CourierCode':'STF', 'CourierName':'Estafeta', 'CourierServiceId':'ESTAFETA_TERRESTRE_CONSUMO', 'CourierServiceName':'Terrestre Consumo', 'DeliveryDays':'2-5 días hab.', 'CouponCode':None, 'DiscountAmount':0, 'TotalPrice':85.83, 'EstimatedDeliveryDate':'2019-07-04','BestOption':True},
-        # {'CourierCode':'FDX', 'CourierName':'FedEx', 'CourierServiceId':'FEDEX_EXPRESS_SAVER', 'CourierServiceName':'Express Saver', 'DeliveryDays':'3 días hab.', 'CouponCode':None, 'DiscountAmount':0, 'TotalPrice':134.75, 'EstimatedDeliveryDate':'2019-07-04','BestOption':False},{'CourierCode':'STF', 'CourierName':'Estafeta', 'CourierServiceId':'ESTAFETA_TERRESTRE_CONSUMO', 'CourierServiceName':'Terrestre Consumo', 'DeliveryDays':'2-3 días hab.', 'CouponCode':None, 'DiscountAmount':0, 'TotalPrice':70.83, 'EstimatedDeliveryDate':'2023-07-04','BestOption':True}]
+            #Si la petición es correcta
+            quotes_data = response.json()#Obtengo la respuesta de la peticion
+            _logger.info(f"Cotizaciones {quotes_data}")
+            #Obtengo los datos de la api
+            # quotes_data = [{'CourierCode':'STF', 'CourierName':'Estafeta', 'CourierServiceId':'ESTAFETA_TERRESTRE_CONSUMO', 'CourierServiceName':'Terrestre Consumo', 'DeliveryDays':'2-5 días hab.', 'CouponCode':None, 'DiscountAmount':0, 'TotalPrice':85.83, 'EstimatedDeliveryDate':'2019-07-04','BestOption':True},
+            # {'CourierCode':'FDX', 'CourierName':'FedEx', 'CourierServiceId':'FEDEX_EXPRESS_SAVER', 'CourierServiceName':'Express Saver', 'DeliveryDays':'3 días hab.', 'CouponCode':None, 'DiscountAmount':0, 'TotalPrice':134.75, 'EstimatedDeliveryDate':'2019-07-04','BestOption':False},{'CourierCode':'STF', 'CourierName':'Estafeta', 'CourierServiceId':'ESTAFETA_TERRESTRE_CONSUMO', 'CourierServiceName':'Terrestre Consumo', 'DeliveryDays':'2-3 días hab.', 'CouponCode':None, 'DiscountAmount':0, 'TotalPrice':70.83, 'EstimatedDeliveryDate':'2023-07-04','BestOption':True}]
+            
+            # Itera sobre los datos de la cotizacion de la api de pakke, y capturar sus datos
+            for quote_data in quotes_data['Pakke']:  
+                quote_courier_code = quote_data['CourierCode']
+                quote_courier_name = quote_data['CourierName']
+                quote_courier_service_id = quote_data['CourierServiceId']
+                quote_courier_service_name = quote_data['CourierServiceName']
+                quote_delivery_days = quote_data['DeliveryDays']
+                quote_coupon_code = quote_data['CouponCode']
+                quote_discount_amount = quote_data['DiscountAmount']
+                quote_total_price = quote_data['TotalPrice']
+                quote_estimated_delivery_date = quote_data['EstimatedDeliveryDate']
+                quote_best_option = quote_data['BestOption']
+                
+                #Buscar si ya existe esa cotización
+                quote_couriers = self.env['parcel.couriers_quote_pakke'].search([('name_shipments', '=', name_shipments), ('courier_code', '=', quote_courier_code), ('name', '=', quote_courier_name), ('courier_service_id', '=', quote_courier_service_id), ('courier_service_name', '=', quote_courier_service_name), ('delivery_days', '=', quote_delivery_days), ('coupon_code', '=', quote_coupon_code), ('discount_amount', '=', quote_discount_amount), ('total_price', '=', quote_total_price), ('estimated_delivery_date', '=', quote_estimated_delivery_date), ('best_option', '=', quote_best_option)], limit=1)  # 
+                
+                if not quote_couriers:  # Si la cotizacion no existe
+                    new_quotes.append({  # Agrega la nueva cotizacion a la lista
+                        'name_shipments': name_shipments,
+                        'courier_code': quote_courier_code,
+                        'name': quote_courier_name,
+                        'courier_service_id': quote_courier_service_id,
+                        'courier_service_name': quote_courier_service_name,
+                        'delivery_days': quote_delivery_days,
+                        'coupon_code': quote_coupon_code,
+                        'discount_amount': quote_discount_amount,
+                        'total_price': quote_total_price,
+                        'estimated_delivery_date': quote_estimated_delivery_date,
+                        'best_option': quote_best_option,
+                    })
+                    
+                else:
+                    
+                    _logger.info("La cotización ya existe")
+                    
+            if new_quotes:  # Si hay nuevas cotizaciones
+                with self.env.cr.savepoint():  # Crea un punto de guardado en la transacción de base de datos actual, ayuda a que si hay un error no realize nada para tener consistencia de datos
+                    self.env['parcel.couriers_quote_pakke'].create(new_quotes)  # Crea nuevas cotizaciones
+                #_logger.info(f"Cotizaciones {new_quotes}")
         
-        # Itera sobre los datos de la cotizacion de la api de pakke, y capturar sus datos
-        for quote_data in quotes_data['Pakke']:  
-            quote_courier_code = quote_data['CourierCode']
-            quote_courier_name = quote_data['CourierName']
-            quote_courier_service_id = quote_data['CourierServiceId']
-            quote_courier_service_name = quote_data['CourierServiceName']
-            quote_delivery_days = quote_data['DeliveryDays']
-            quote_coupon_code = quote_data['CouponCode']
-            quote_discount_amount = quote_data['DiscountAmount']
-            quote_total_price = quote_data['TotalPrice']
-            quote_estimated_delivery_date = quote_data['EstimatedDeliveryDate']
-            quote_best_option = quote_data['BestOption']
+        except requests.exceptions.RequestException as e:
             
-            #Buscar si ya existe esa cotización
-            quote_couriers = self.env['parcel.couriers_quote_pakke'].search([('name_shipments', '=', name_shipments), ('courier_code', '=', quote_courier_code), ('name', '=', quote_courier_name), ('courier_service_id', '=', quote_courier_service_id), ('courier_service_name', '=', quote_courier_service_name), ('delivery_days', '=', quote_delivery_days), ('coupon_code', '=', quote_coupon_code), ('discount_amount', '=', quote_discount_amount), ('total_price', '=', quote_total_price), ('estimated_delivery_date', '=', quote_estimated_delivery_date), ('best_option', '=', quote_best_option)], limit=1)  # 
-            
-            if not quote_couriers:  # Si la cotizacion no existe
-                new_quotes.append({  # Agrega la nueva cotizacion a la lista
-                    'name_shipments': name_shipments,
-                    'courier_code': quote_courier_code,
-                    'name': quote_courier_name,
-                    'courier_service_id': quote_courier_service_id,
-                    'courier_service_name': quote_courier_service_name,
-                    'delivery_days': quote_delivery_days,
-                    'coupon_code': quote_coupon_code,
-                    'discount_amount': quote_discount_amount,
-                    'total_price': quote_total_price,
-                    'estimated_delivery_date': quote_estimated_delivery_date,
-                    'best_option': quote_best_option,
-                })
-                
-            else:
-                
-                _logger.info("La cotización ya existe")
-                
-        if new_quotes:  # Si hay nuevas cotizaciones
-            with self.env.cr.savepoint():  # Crea un punto de guardado en la transacción de base de datos actual, ayuda a que si hay un error no realize nada para tener consistencia de datos
-                self.env['parcel.couriers_quote_pakke'].create(new_quotes)  # Crea nuevas cotizaciones
-            #_logger.info(f"Cotizaciones {new_quotes}")
-            
+            raise ValidationError((f"No se pudo realizar la cotización {e}"))    
+        
         self.name_orders = name_shipments #Para filtrar por el nombre del pedido
 
         self.message_post(body="Cotización realizada exitosamente", subject="Aviso")
@@ -357,18 +366,23 @@ class order_control_shipments_pakke(models.Model):
                     "Email": self.recipient_email
             }
         }
-
-        json_body = json.dumps(body)#Se convierte a json
-
-        #Se realiza la petición
-        response = requests.post(url, headers=headers, data=json_body)
-            
-        ShipmentId = response.json()#Obtengo la respuesta de la peticion
         
-        _logger.info(f"Id del envio{ShipmentId['ShipmentId']}")
-        
-        return ShipmentId['ShipmentId']#Obtengo el id del envio
+        try:
+
+            json_body = json.dumps(body)#Se convierte a json
+
+            #Se realiza la petición
+            response = requests.post(url, headers=headers, data=json_body)
+                
+            ShipmentId = response.json()#Obtengo la respuesta de la peticion
             
+            _logger.info(f"Id del envio{ShipmentId['ShipmentId']}")
+            
+            return ShipmentId['ShipmentId']#Obtengo el id del envio
+        
+        except requests.exceptions.RequestException as e:
+            
+            raise ValidationError((f"No se pudo realizar el envio {e}"))              
     
     def get_data_shipping_guide(self, ShipmentId):#Funcion para obtener la gui de envio
         
@@ -378,12 +392,18 @@ class order_control_shipments_pakke(models.Model):
             "Authorization": f"{self.api_key_pakke}",
             "Accept": "application/json"
         }
-        response = requests.get(url, headers=headers)  # Realiza la solicitud a la API
+        
+        try:
+            response = requests.get(url, headers=headers)  # Realiza la solicitud a la API
+                
+            data_pdf_shipping_guide = response.json()  # Obtiene los datos de los estados de la respuesta de la API
             
-        data_pdf_shipping_guide = response.json()  # Obtiene los datos de los estados de la respuesta de la API
+            _logger.info(f"PDF{data_pdf_shipping_guide['data']}")
+            
+            return data_pdf_shipping_guide['data']
         
-        _logger.info(f"PDF{data_pdf_shipping_guide['data']}")
-        
-        return data_pdf_shipping_guide['data']
+        except requests.exceptions.RequestException as e:
+            
+            raise ValidationError((f"No se pudo obtener el id del envio {e}"))
    
        

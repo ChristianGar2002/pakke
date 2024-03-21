@@ -4,8 +4,7 @@
 
     'summary': "Short (1 phrase/line) summary of the module's purpose",
 
-    'description': """
-Modulo para la implementacion de las apis de EnvioPack y Pakke
+    'description': """ Modulo para la implementacion de las api Pakke
     """,
 
     'author': "Christian Garcia Vazquez",
