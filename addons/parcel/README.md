@@ -11,3 +11,5 @@ Este modulo brinda una optimización en el proceso de realizar envios por medio 
 
 # Uso
 Para utilizar este modulo se necesita tener una instancia de odoo17 funcionando y contar con el modulo de order_control debido a que en este modulo es donde se integraran los elementos que propociona este modulo, a la vez se necesita tener una apikey de paga de la api de pakke para que la funcionalidad del modulo pueda ser posible e integrarla en el codigo correspondiente.
+
+

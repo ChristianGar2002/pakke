@@ -99,7 +99,10 @@ class order_control_shipments_pakke(models.Model):
 
             self.env['parcel.check'].create({'name': self.name})#Si no esta lo creo
         
-        self.api_key_pakke = "0XSyUfbeuEGWjOmKjRHHeNBE4H41gPI4bD3zlL51zK47bbcruKzRRX9t3m44sWYp"
+        Param = self.env['ir.config_parameter']#Creo una instancia del modelo de los parametros del sistema
+        api_key = Param.get_param('APIKEY_PAKKE', default='')#Obtengo la api key de la instancia anterior
+        
+        self.api_key_pakke = api_key
             
         self.data_package_dimension()
         
@@ -262,36 +265,46 @@ class order_control_shipments_pakke(models.Model):
     def pdf_shipping_guide(self):#Funcion para generar la guia de envio en pdf
         
         if self.id_couriers_selection:#Para validar si se ha seleccionado un mensajero
-            #Creación de la guia de envio
             
-            # ShipmentId = self.create_shipping_guide()
-            
-            # #Obtener el pdf de la guia codificado en b64
-            
-            # data_pdf_shipping_guide = self.get_data_shipping_guide(ShipmentId)
-            
-            #Datos a pasar al informe PDF
-            data = {
-                'name_order': self.name,
-            }
-            #_logger.error(f"Imprimiendo{data['name_order']}")
-            
-            #Se obtiene la referencia del reporte
-            xml_id = 'parcel.parcel_action'
+            if self.api_key_pakke == "0XSyUfbeuEGWjOmKjRHHeNBE4H41gPI4bD3zlL51zK47bbcruKzRRX9t3m44sWYp":#Si la apikey es de prueba
+                
+                #Datos a pasar al informe PDF
+                data = {
+                    'name_order': self.name,
+                }
+                #_logger.error(f"Imprimiendo{data['name_order']}")
+                
+                #Se obtiene la referencia del reporte
+                xml_id = 'parcel.parcel_action'
 
-            #Se genera el reporte accion
-            action = self.env.ref(xml_id).report_action(self, data=data)
+                #Se genera el reporte accion
+                action = self.env.ref(xml_id).report_action(self, data=data)
+                
+                #Id del reporte
+                report = self.env.ref('parcel.parcel_action')#Busco el reporte en la base de datos
+                
+                #Renderizo el reporte
+                pdf, _ = self.env['ir.actions.report']._render_qweb_pdf(report.id, data=data)
+                
+                #Codifico el pdf en b64
+                data_pdf_shipping_guide = base64.b64encode(pdf)
+                
+                name_pdf_shipping_guide = f"Guia_envio_{self.name}_shipment_id.pdf"
+                
+            elif self.api_key_pakke == "iNTi4G90zDc50sI9hLuNYAGKhNRqtsIFB92yzzFFSdoBWocp7lDIRm43DangOADY":#Si la api key es oficial
+                
+                #Creación de la guia de envio
+                
+                ShipmentId = self.create_shipping_guide()
+                
+                # #Obtener el pdf de la guia codificado en b64
+                
+                data_pdf_shipping_guide = self.get_data_shipping_guide(ShipmentId)
+                
+                name_pdf_shipping_guide = f"Guia_envio_{self.name}_{ShipmentId}_{self.courier_service_id}.pdf"
+                
             
-            #Id del reporte
-            report = self.env.ref('parcel.parcel_action')#Busco el reporte en la base de datos
-            
-            #Renderizo el reporte
-            pdf, _ = self.env['ir.actions.report']._render_qweb_pdf(report.id, data=data)
-            
-            #Codifico el pdf en b64
-            pdf_code = base64.b64encode(pdf)
-            
-            self.env['parcel.test'].create({'name': self.name, 'test_pdf': pdf_code, 'file_name':f"Guia_envio_{self.name}.pdf"})
+            self.env['parcel.test'].create({'name': self.name, 'test_pdf': data_pdf_shipping_guide, 'file_name':name_pdf_shipping_guide})
             
             test = self.env['parcel.test'].search([('name', '=', self.name)])
                 

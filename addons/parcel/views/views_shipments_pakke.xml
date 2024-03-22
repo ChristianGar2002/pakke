@@ -9,7 +9,6 @@
                     
                     <!-- Para datos de envios y cotizacion-->
                     <page string="Datos de envio" name="shipments_data">
-
                         <notebook>
                             <page string="Datos generales" name="general_data">
                                 <group>
