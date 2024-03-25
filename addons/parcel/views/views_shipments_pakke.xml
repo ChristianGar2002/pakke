@@ -14,16 +14,19 @@
                                 <group>
                                     <field name="courier_code"/>
                                     <field name="courier_service_id"/>
-                                    <field name="reseller_reference" invisible="1"/>
-                                    <field name="reseller_reference_parcel" readonly="validation_guide"/>
+                                    <field name="reseller_reference" readonly="validation_guide"/>
                                     <field name="content" readonly="validation_guide"/>
                                     <field name="coupon_code" readonly="validation_guide"/>
                                     <field name="insured_amount" readonly="validation_guide"/>
+                                    <field name="api_key_pakke" invisible="1"/>
                                 </group>
                             </page>
-                            <page string="Datos de envio" name="shipping_information">
+                            <page string="Datos de salida" name="shipping_information">
+                                <group name="partner_from">
+                                    <field name="partner_id_from" readonly="validation_guide"/>
+                                </group>
                                 <group name="address_from_parcel">
-                                    <group string="Dirección de envio" name="address_from">
+                                    <group string="Dirección de salida" name="address_from">
                                         <field name="address_from_zipcode" readonly="validation_guide"/>
                                         <field name="address_from_state" readonly="validation_guide"/>
                                         <field name="address_from_city" readonly="validation_guide"/>
@@ -41,6 +44,9 @@
                                 </group>
                             </page>
                             <page string="Datos de entrega" name="delivery_data">
+                                <group name="partner_to">
+                                    <field name="partner_id_to" readonly="validation_guide"/>
+                                </group>
                                 <group name="address_to_parcel">
                                     <group string="Dirección de entrega" name="address_to">
                                         <field name="address_to_zipcode" readonly="validation_guide"/>

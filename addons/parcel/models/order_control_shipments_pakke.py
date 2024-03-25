@@ -16,8 +16,7 @@ class order_control_shipments_pakke(models.Model):
 
     courier_code = fields.Char(string="Codigo de mensajeria", compute="quote_table_data")
     courier_service_id = fields.Char(string="Id del servicio de mensajeria", compute="quote_table_data")
-    reseller_reference = fields.Char(string="Referencia personalizada del paquete",compute="get_data_shipments", readonly=False)#Para darle valor a los demas campos de manera automatica
-    reseller_reference_parcel = fields.Char(string="Referencia personalizada del paquete", required=True)
+    reseller_reference = fields.Char(string="Referencia personalizada del paquete", required=True)
     content = fields.Char(string="Contenido del paquete", required=True)
     coupon_code = fields.Char(string="Codigo de cupón")
     insured_amount = fields.Float(string="Valor declarado del paquete", required=True, help="Precio del contenido del paquete")
@@ -65,7 +64,7 @@ class order_control_shipments_pakke(models.Model):
     test_table_pdf = fields.One2many("parcel.test", "id_shipments", string="Tabla de pdfs")
     
     #Credencial oficial de la api de PAKKE
-    api_key_pakke = fields.Char(string="Api", compute="get_data_shipments")
+    api_key_pakke = fields.Char(string="Api", compute="get_data_shipments_api")
     
     #Campos relacionados package_dimensions
     id_packages = fields.Many2one("parcel.package_dimensions", string="Selecciona una medida de paquete")
@@ -73,31 +72,47 @@ class order_control_shipments_pakke(models.Model):
     #Campo para validar si ya se realizo la guia de envio
     validation_guide = fields.Boolean(default=False)
     
-    @api.onchange("sender_phone1", "sender_phone2", "recipient_phone1")
-    def validation_number(self):#Funcion para validar que los campos de telefono solo se han numericos
+    #Campos que se relacionan con los partners
+    partner_id_from = fields.Many2one("res.partner", string="Selecciona al cliente de salida")
+    
+    partner_id_to = fields.Many2one("res.partner", string="Selecciona al cliente de entrega")
+    
+    @api.onchange("partner_id_from")
+    def get_data_partner_from(self):#Función para colocar de forma automatica los datos de la dirección de salida
         
-        for field_number in self:
-            
-            if field_number.sender_phone1 and not field_number.sender_phone1.isdigit():
-                
-                raise ValidationError(("El campo 'Telefono' del remitente es de solo números"))
-            
-            elif field_number.sender_phone2 and not field_number.sender_phone2.isdigit():
-                
-                raise ValidationError(("El campo 'Telefono adicional' del remitente es de solo números"))
-            
-            elif field_number.recipient_phone1 and not field_number.recipient_phone1.isdigit():
-                
-                raise ValidationError(("El campo 'Telefono' del destinatario es de solo números"))
+        #Datos de dirección de salida
+        self.address_from_zipcode = self.partner_id_from.zip
+        self.address_from_state = self.partner_id_from.state_id.name
+        self.address_from_city = self.partner_id_from.city
+        self.address_from_neighborhood = self.partner_id_from.street2
+        self.address_from_address1 = self.partner_id_from.street
+        self.address_from_address2 = self.partner_id_from.street2
+        
+        #Datos de información del remitente
+        self.sender_name = self.partner_id_from.name
+        self.sender_phone1 = self.partner_id_from.phone
+        self.sender_phone2 = self.partner_id_from.mobile
+        self.sender_email = self.partner_id_from.email
+        
+    @api.onchange("partner_id_to")
+    def get_data_partner_to(self):#Función para colocar de forma automatica los datos de la dirección de destinatario
+        
+        #Datos de dirección de entrega
+        self.address_to_zipcode = self.partner_id_to.zip
+        self.address_to_state = self.partner_id_to.state_id.name
+        self.address_to_city = self.partner_id_to.city
+        self.address_to_neighborhood = self.partner_id_to.street2
+        self.address_to_address1 = self.partner_id_to.street
+        self.address_to_address2 = self.partner_id_to.street2
+        
+        #Datos de información del destinatario
+        self.recipient_name = self.partner_id_to.name
+        self.recipient_phone1 = self.partner_id_to.phone
+        self.recipient_company_name = self.partner_id_to.parent_id.name
+        self.recipient_email = self.partner_id_to.email
     
     @api.onchange("name")
-    def get_data_shipments(self):#Funcion para obtener los datos que ya estan registrados
-        if not self.env['parcel.check'].search([('name', '=', self.name)], limit=1):#Busco si el registro actual de sale.order ya esta registrado    
-            self.reseller_reference_parcel = self.partner_id.name
-            self.content = self.user_id.name
-            self.coupon_code = self.team_id.name
-
-            self.env['parcel.check'].create({'name': self.name})#Si no esta lo creo
+    def get_data_shipments_api(self):#Funcion para colocar datos de la api y las dimensiones
         
         Param = self.env['ir.config_parameter']#Creo una instancia del modelo de los parametros del sistema
         api_key = Param.get_param('APIKEY_PAKKE', default='')#Obtengo la api key de la instancia anterior
@@ -105,11 +120,6 @@ class order_control_shipments_pakke(models.Model):
         self.api_key_pakke = api_key
             
         self.data_package_dimension()
-        
-    @api.onchange("partner_id")
-    def get_data_shipments_update(self):#Funcion para actualizar los datos obtenidos
-        
-        self.reseller_reference_parcel = self.partner_id.name
     
     def data_package_dimension(self):#Funcion para registrar medidas estandar de packetes
         
@@ -335,7 +345,7 @@ class order_control_shipments_pakke(models.Model):
                     'res_id': self.id,
                 })
             self.message_post(
-                body=f"Guia de envio {ShipmentId} de la orden {self.name} generada exitosamente",
+                body=f"Guia de envio {ShipmentId} del pedido {self.name} generada exitosamente",
                 message_type='notification',
                 attachment_ids=[attachment.id]
             )
@@ -357,7 +367,7 @@ class order_control_shipments_pakke(models.Model):
         body = {
             "CourierCode": self.courier_code,
             "CourierServiceId": self.courier_service_id,
-            "ResellerReference": self.reseller_reference_parcel,
+            "ResellerReference": self.reseller_reference,
             "Content": self.content,
             "AddressFrom": {
                 "ZipCode": self.address_from_zipcode,
