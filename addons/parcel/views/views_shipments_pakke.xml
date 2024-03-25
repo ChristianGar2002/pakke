@@ -8,7 +8,7 @@
                 <xpath expr="//page[@name='customer_signature']" position="after">
                     
                     <!-- Para datos de envios y cotizacion-->
-                    <page string="Datos de envio" name="shipments_data">
+                    <page string="Datos de cotización" name="shipments_data">
                         <notebook>
                             <page string="Datos generales" name="general_data">
                                 <group>
@@ -67,62 +67,50 @@
                                     <field name="parcel_height" readonly="validation_guide"/>
                                     <field name="parcel_weight" readonly="validation_guide"/>
                                 </group>
+                                <div class="text-end">
+                                    <button name="quote" invisible="validation_guide" type="object" string="Cotizar" class="oe_highlight mt-2 btn-lg"></button>
+                                    <field name="validation_guide" invisible="1"/>
+                                </div>
                             </page>
                             <field name="validation_guide" invisible="1"/>
+                            <!-- Para cotizar-->
+                            <page string="Cotizar" name="quote">
+                                <group name="selection_couriers">
+                                    <group string="Mensajeros de Pakke" name="pakke_messengers">
+
+                                        <field name="id_couriers_selection" readonly="validation_guide" string="Mensajero seleccionado"/>
+                                        <field name="validation_guide" invisible="1"/>
+                                    </group>
+                                </group>
+                                    <field name="id_couriers_table" readonly="validation_guide" widget="one2many" nolabel="1" string="Tabla de cotización"><!--Para abarque el 100% del ancho, y esto es para el One2many y se muestren los campos que se desean-->
+                                        <tree string="Courier" decoration-warning="record_selection == True" decoration-bf="record_selection == True" editable="bottom" delete="false">
+                                            <button name="couriers_selection" invisible="validation_guide" string="Seleccionar" type="object" class="oe_highlight btn"/>
+                                            <field name="courier_code"/>
+                                            <field name="name"/>
+                                            <field name="courier_service_id"/>
+                                            <field name="delivery_days"/>
+                                            <field name="estimated_delivery_date"/>
+                                            <field name="total_price"/>
+                                            <field name="record_selection" invisible="1" string="" class="d-none"/>
+                                            <field name="validation_guide" invisible="1" string="" class="d-none"/>
+                                        </tree>
+                                    </field>
+                                    <field name="name_orders" invisible="1"/>
+                                    <group name="couriers_enviopack">
+                                        <group string="Mensajeros de Enviopack" name="couriers_fields_enviopack">
+            
+                                            <!-- <field name="id_couriers_selection" string="Selecciona un mensajero"/> -->
+                                        
+                                        </group>
+                                    </group>
+                                <div class="text-end">
+                                    <button name="pdf_shipping_guide" invisible="validation_guide" type="object" string="Generar Guia" class="oe_highlight mt-2 btn-lg"></button>
+                                    <field name="validation_guide" invisible="1"/>
+                                </div>
+                                
+                            </page>
                         </notebook>
 
-                        <div class="text-end">
-                            <button name="quote" invisible="validation_guide" type="object" string="Cotizar" class="oe_highlight mt-2 btn-lg"></button>
-                            <field name="validation_guide" invisible="1"/>
-                        </div>
-
-                    </page>
-                    
-                    <!-- Para cotizar-->
-                    <page string="Cotizar" name="quote">
-                        <group name="selection_couriers">
-                            <group string="Mensajeros de Pakke" name="pakke_messengers">
-
-                                <field name="id_couriers_selection" readonly="validation_guide" string="Mensajero seleccionado"/>
-                                <field name="validation_guide" invisible="1"/>
-                            </group>
-                        </group>
-                            <field name="id_couriers_table" readonly="validation_guide" widget="one2many" nolabel="1" string="Tabla de cotización"><!--Para abarque el 100% del ancho, y esto es para el One2many y se muestren los campos que se desean-->
-                                <tree string="Courier" decoration-warning="record_selection == True" decoration-bf="record_selection == True" editable="bottom" delete="false">
-                                    <button name="couriers_selection" invisible="validation_guide" string="Seleccionar" type="object" class="oe_highlight btn"/>
-                                    <field name="courier_code"/>
-                                    <field name="name"/>
-                                    <field name="courier_service_id"/>
-                                    <field name="delivery_days"/>
-                                    <field name="estimated_delivery_date"/>
-                                    <field name="total_price"/>
-                                    <field name="record_selection" invisible="1" string="" class="d-none"/>
-                                    <field name="validation_guide" invisible="1" string="" class="d-none"/>
-                                </tree>
-                            </field>
-                            <field name="name_orders" invisible="1"/>
-                            <group name="couriers_enviopack">
-                                <group string="Mensajeros de Enviopack" name="couriers_fields_enviopack">
-    
-                                    <!-- <field name="id_couriers_selection" string="Selecciona un mensajero"/> -->
-                                
-                                </group>
-                            </group>
-                        <div class="text-end">
-                            <button name="pdf_shipping_guide" invisible="validation_guide" type="object" string="Generar Guia" class="oe_highlight mt-2 btn-lg"></button>
-                            <field name="validation_guide" invisible="1"/>
-                        </div>
-                        
-                    </page>
-
-                    <!-- Prueba pdf-->
-                    <page string="PDF" name="pdf">
-                        <field name="test_table_pdf" widget="one2many" nolabel="1" string="Tabla de pruebas"><!--Para abarque el 100% del ancho, y esto es para el One2many y se muestren los campos que se desean-->
-                            <tree string="Test">
-                                <field name="test_pdf" filename="file_name" widget="binary"/>
-                                <field name="file_name" invisible="1" string=" "/>
-                            </tree>
-                        </field>
                     </page>
                     
                 </xpath>

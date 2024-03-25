@@ -44,7 +44,7 @@ class order_control_shipments_pakke(models.Model):
     parcel_length = fields.Integer(string="Longitud (cm)", required=True, default=1)
     parcel_width = fields.Integer(string="Ancho (cm)", required=True, default=1)
     parcel_height = fields.Integer(string="Altura (cm)", required=True, default=1)
-    parcel_weight = fields.Integer(string="Peso (kg)", required=True, default=1)
+    parcel_weight = fields.Float(string="Peso (kg)", required=True, default=1, help="Utiliza la sintaxis de la coma para los kilos con gramos (1,20) 1 kilo y 200 gramos")
     
     #Campos para la parte del remitente
     sender_name = fields.Char(string="Nombre", required=True)
@@ -289,7 +289,9 @@ class order_control_shipments_pakke(models.Model):
                 #Codifico el pdf en b64
                 data_pdf_shipping_guide = base64.b64encode(pdf)
                 
-                name_pdf_shipping_guide = f"Guia_envio_{self.name}_shipment_id.pdf"
+                ShipmentId = "123_prueba"
+                
+                name_pdf_shipping_guide = f"Guia_envio_{self.name}_{ShipmentId}.pdf"
                 
             elif self.api_key_pakke == "iNTi4G90zDc50sI9hLuNYAGKhNRqtsIFB92yzzFFSdoBWocp7lDIRm43DangOADY":#Si la api key es oficial
                 
@@ -303,15 +305,14 @@ class order_control_shipments_pakke(models.Model):
                 
                 name_pdf_shipping_guide = f"Guia_envio_{self.name}_{ShipmentId}_{self.courier_service_id}.pdf"
                 
-            
+            #Codigo para relacionar el pdf al modelo parcel_test
             self.env['parcel.test'].create({'name': self.name, 'test_pdf': data_pdf_shipping_guide, 'file_name':name_pdf_shipping_guide})
             
             test = self.env['parcel.test'].search([('name', '=', self.name)])
                 
             # Actualiza el campo One2many con los registros obtenidos
             self.test_table_pdf = [(6, 0, test.ids)]
-        
-            self.message_post(body="Guia de envio generada exitosamente", subject="Aviso")
+            
             
             #Para verificar si el proceso de guia de envio ha sido realizado con exito
             
@@ -322,6 +323,22 @@ class order_control_shipments_pakke(models.Model):
                 record_guide.validation_guide = True#Vuelvo False a todos los record_selection del id_couriers_table
             
             self.validation_guide = True
+            
+            
+            #Codigo para mandar la alerta al chatter del pdf
+            attachment = self.env['ir.attachment'].create({
+                    'name': name_pdf_shipping_guide,
+                    'type': 'binary',
+                    'datas': data_pdf_shipping_guide,
+                    'res_name': name_pdf_shipping_guide,
+                    'res_model': 'sale.order',
+                    'res_id': self.id,
+                })
+            self.message_post(
+                body=f"Guia de envio {ShipmentId} de la orden {self.name} generada exitosamente",
+                message_type='notification',
+                attachment_ids=[attachment.id]
+            )
             
         else:
             
