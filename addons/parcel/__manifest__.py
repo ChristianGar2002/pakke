@@ -19,19 +19,12 @@
     'auto_installable':False,
 
     # any module necessary for this one to work correctly
-    'depends': ['base', 'sale_management'],
+    'depends': ['base', 'sale_management'],#Se coloca el modulo del que depende, El modulo api_pakke dependeria del modulo brokers_base
 
     # always loaded
     'data': [
         'security/ir.model.access.csv',
-        'views/views.xml',
-        'views/templates.xml',
         'views/views_shipments_pakke.xml',
-        'report/report_guide.xml',
-    ],
-    # only loaded in demonstration mode
-    'demo': [
-        'demo/demo.xml',
     ],
 }
 

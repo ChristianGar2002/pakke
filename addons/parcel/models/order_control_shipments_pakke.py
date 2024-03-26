@@ -2,7 +2,6 @@
 
 from odoo import models, fields, api
 import logging
-import base64 #Para los pdf
 from odoo.exceptions import ValidationError#Para las alertas de usuario
 #Para hacer peticiones
 import requests
@@ -18,8 +17,8 @@ class order_control_shipments_pakke(models.Model):
     courier_service_id = fields.Char(string="Id del servicio de mensajeria", compute="quote_table_data")
     reseller_reference = fields.Char(string="Referencia personalizada del paquete", required=True)
     content = fields.Char(string="Contenido del paquete", required=True)
-    coupon_code = fields.Char(string="Codigo de cupón")
-    insured_amount = fields.Float(string="Valor declarado del paquete", required=True, help="Precio del contenido del paquete")
+    coupon_code = fields.Char(string="Codigo de cupón", help="Ingresa código de cupon, (No es obligatorio colocarlo)")
+    insured_amount = fields.Float(string="Valor declarado del paquete", required=True, help="Precio del contenido del paquete", default=1)
     
     #Campos para la parte del Dirección​ ​de​ ​Envío
     address_from_zipcode = fields.Char(string="Código Postal", required=True)
@@ -61,7 +60,6 @@ class order_control_shipments_pakke(models.Model):
     id_couriers_selection = fields.Many2one("parcel.couriers_quote_pakke", string="Selecciona al mensajero", domain="[('name_shipments', '=', name_orders)]")
     id_couriers_table = fields.One2many("parcel.couriers_quote_pakke", "id_shipments", string="Tabla de cotización")
     name_orders = fields.Char(string="Nombre del pedido")#Campo para filtrar por nombre de pedidos
-    test_table_pdf = fields.One2many("parcel.test", "id_shipments", string="Tabla de pdfs")
     
     #Credencial oficial de la api de PAKKE
     api_key_pakke = fields.Char(string="Api", compute="get_data_shipments_api")
@@ -74,9 +72,10 @@ class order_control_shipments_pakke(models.Model):
     
     #Campos que se relacionan con los partners
     partner_id_from = fields.Many2one("res.partner", string="Selecciona al cliente de salida")
-    
     partner_id_to = fields.Many2one("res.partner", string="Selecciona al cliente de entrega")
     
+    
+    #######Funciones que colocan los datos de los partner de manera automatica
     @api.onchange("partner_id_from")
     def get_data_partner_from(self):#Función para colocar de forma automatica los datos de la dirección de salida
         
@@ -111,6 +110,8 @@ class order_control_shipments_pakke(models.Model):
         self.recipient_company_name = self.partner_id_to.parent_id.name
         self.recipient_email = self.partner_id_to.email
     
+    
+    #######Funciones que tienen que ver con el modelo de parcel.package_dimensions
     @api.onchange("name")
     def get_data_shipments_api(self):#Funcion para colocar datos de la api y las dimensiones
         
@@ -153,7 +154,9 @@ class order_control_shipments_pakke(models.Model):
         self.parcel_length = self.id_packages.length
         self.parcel_width = self.id_packages.width
         self.parcel_height = self.id_packages.height
-        
+    
+    
+    #######Funciones que tienen que ver con el modelo de parcel_couriers_quote_pakke   
     @api.onchange("id_couriers_selection")
     def couriers_selection_reverse(self):#Funcion para actualizar el campo id_couriers_table si se elije directamente el courier desde el campo id_courier_selection
         
@@ -167,7 +170,6 @@ class order_control_shipments_pakke(models.Model):
                 
                 record_quote.record_selection = True#Si es asi, le coloco True al record_selection del registro pertinente del campo One2many de id_couriers_table
    
-        
     def quote(self):#Funcion para cotizar la api de pakke
         #Almaceno el nombre de cada registro del modelo
         name_shipments = self.name
@@ -201,10 +203,6 @@ class order_control_shipments_pakke(models.Model):
             
             #Si la petición es correcta
             quotes_data = response.json()#Obtengo la respuesta de la peticion
-            _logger.info(f"Cotizaciones {quotes_data}")
-            #Obtengo los datos de la api
-            # quotes_data = [{'CourierCode':'STF', 'CourierName':'Estafeta', 'CourierServiceId':'ESTAFETA_TERRESTRE_CONSUMO', 'CourierServiceName':'Terrestre Consumo', 'DeliveryDays':'2-5 días hab.', 'CouponCode':None, 'DiscountAmount':0, 'TotalPrice':85.83, 'EstimatedDeliveryDate':'2019-07-04','BestOption':True},
-            # {'CourierCode':'FDX', 'CourierName':'FedEx', 'CourierServiceId':'FEDEX_EXPRESS_SAVER', 'CourierServiceName':'Express Saver', 'DeliveryDays':'3 días hab.', 'CouponCode':None, 'DiscountAmount':0, 'TotalPrice':134.75, 'EstimatedDeliveryDate':'2019-07-04','BestOption':False},{'CourierCode':'STF', 'CourierName':'Estafeta', 'CourierServiceId':'ESTAFETA_TERRESTRE_CONSUMO', 'CourierServiceName':'Terrestre Consumo', 'DeliveryDays':'2-3 días hab.', 'CouponCode':None, 'DiscountAmount':0, 'TotalPrice':70.83, 'EstimatedDeliveryDate':'2023-07-04','BestOption':True}]
             
             # Itera sobre los datos de la cotizacion de la api de pakke, y capturar sus datos
             for quote_data in quotes_data['Pakke']:  
@@ -257,71 +255,34 @@ class order_control_shipments_pakke(models.Model):
     @api.onchange("id_couriers_selection")
     def quote_table_data(self):#Funcion para colocar la información en el One2many y del mensajero que se elija
         
-        for quote_many_data in self:
-            
-            name_shipments=quote_many_data.name
+        name_shipments=self.name
+    
+        pakkes = self.env['parcel.couriers_quote_pakke'].search([('name_shipments', '=', name_shipments)])#Buscar los registros con el nombre del registro del modelo
         
-            pakkes = self.env['parcel.couriers_quote_pakke'].search([('name_shipments', '=', name_shipments)])#Buscar los registros con el nombre del registro del modelo
-            
-            # Actualiza el campo One2many con los registros obtenidos
-            self.id_couriers_table = [(6, 0, pakkes.ids)]
-            
-            #Colocar los datos del mensajero
-            quote_many_data.courier_code = quote_many_data.id_couriers_selection.courier_code
-            
-            quote_many_data.courier_service_id = quote_many_data.id_couriers_selection.courier_service_id
+        # Actualiza el campo One2many con los registros obtenidos
+        self.id_couriers_table = [(6, 0, pakkes.ids)]
         
-            
+        #Colocar los datos del mensajero
+        self.courier_code = self.id_couriers_selection.courier_code
+        
+        self.courier_service_id = self.id_couriers_selection.courier_service_id
+        
+    
+    #######Funciones que tiene que ver con la creación, obtencion de guias de envio en pdf        
     def pdf_shipping_guide(self):#Funcion para generar la guia de envio en pdf
         
         if self.id_couriers_selection:#Para validar si se ha seleccionado un mensajero
+                
+            #Creación de la guia de envio
             
-            if self.api_key_pakke == "0XSyUfbeuEGWjOmKjRHHeNBE4H41gPI4bD3zlL51zK47bbcruKzRRX9t3m44sWYp":#Si la apikey es de prueba
-                
-                #Datos a pasar al informe PDF
-                data = {
-                    'name_order': self.name,
-                }
-                #_logger.error(f"Imprimiendo{data['name_order']}")
-                
-                #Se obtiene la referencia del reporte
-                xml_id = 'parcel.parcel_action'
-
-                #Se genera el reporte accion
-                action = self.env.ref(xml_id).report_action(self, data=data)
-                
-                #Id del reporte
-                report = self.env.ref('parcel.parcel_action')#Busco el reporte en la base de datos
-                
-                #Renderizo el reporte
-                pdf, _ = self.env['ir.actions.report']._render_qweb_pdf(report.id, data=data)
-                
-                #Codifico el pdf en b64
-                data_pdf_shipping_guide = base64.b64encode(pdf)
-                
-                ShipmentId = "123_prueba"
-                
-                name_pdf_shipping_guide = f"Guia_envio_{self.name}_{ShipmentId}.pdf"
-                
-            elif self.api_key_pakke == "iNTi4G90zDc50sI9hLuNYAGKhNRqtsIFB92yzzFFSdoBWocp7lDIRm43DangOADY":#Si la api key es oficial
-                
-                #Creación de la guia de envio
-                
-                ShipmentId = self.create_shipping_guide()
-                
-                # #Obtener el pdf de la guia codificado en b64
-                
-                data_pdf_shipping_guide = self.get_data_shipping_guide(ShipmentId)
-                
-                name_pdf_shipping_guide = f"Guia_envio_{self.name}_{ShipmentId}_{self.courier_service_id}.pdf"
-                
-            #Codigo para relacionar el pdf al modelo parcel_test
-            self.env['parcel.test'].create({'name': self.name, 'test_pdf': data_pdf_shipping_guide, 'file_name':name_pdf_shipping_guide})
+            ShipmentId = self.create_shipping_guide()
             
-            test = self.env['parcel.test'].search([('name', '=', self.name)])
-                
-            # Actualiza el campo One2many con los registros obtenidos
-            self.test_table_pdf = [(6, 0, test.ids)]
+            # #Obtener el pdf de la guia codificado en b64
+            
+            data_pdf_shipping_guide = self.get_data_shipping_guide(ShipmentId)
+            
+            #Nombre del archivo pdf
+            name_pdf_shipping_guide = f"Guia_envio_{self.name}_{ShipmentId}_{self.courier_service_id}.pdf"
             
             
             #Para verificar si el proceso de guia de envio ha sido realizado con exito
@@ -353,8 +314,7 @@ class order_control_shipments_pakke(models.Model):
         else:
             
             raise ValidationError(("No haz seleccionado ningun mensajero"))
-        
-        
+           
     def create_shipping_guide(self):#Funcion ara crear la guia de envio
         
         url = "https://seller.pakke.mx/api/v1/Shipments"#Endpoint para generar envios
@@ -416,7 +376,7 @@ class order_control_shipments_pakke(models.Model):
                 
             ShipmentId = response.json()#Obtengo la respuesta de la peticion
             
-            _logger.info(f"Id del envio{ShipmentId['ShipmentId']}")
+            # _logger.info(f"Id del envio{ShipmentId['ShipmentId']}")
             
             return ShipmentId['ShipmentId']#Obtengo el id del envio
         
@@ -438,7 +398,7 @@ class order_control_shipments_pakke(models.Model):
                 
             data_pdf_shipping_guide = response.json()  # Obtiene los datos de los estados de la respuesta de la API
             
-            _logger.info(f"PDF{data_pdf_shipping_guide['data']}")
+            # _logger.info(f"PDF{data_pdf_shipping_guide['data']}")
             
             return data_pdf_shipping_guide['data']
         

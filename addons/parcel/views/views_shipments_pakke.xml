@@ -3,11 +3,11 @@
         <record id="sale_order_inherit_shipments" model="ir.ui.view">
             <field name="name">sale.order_inherit_shipments</field>
             <field name="model">sale.order</field>
-            <field name="inherit_id" ref="sale.view_order_form"/>
+            <field name="inherit_id" ref="sale.view_order_form"/><!--Aqui se coloca de que vista se esta heredando-->
             <field name="arch" type="xml">
-                <xpath expr="//page[@name='customer_signature']" position="after">
+                <xpath expr="//page[@name='customer_signature']" position="after"><!--Se debe colocar la pagina en la que se quiere que se coloco todo lo demas-->
                     
-                    <!-- Para datos de envios y cotizacion-->
+                    <!-- Para datos de envios y cotización-->
                     <page string="Datos de cotización" name="shipments_data">
                         <notebook>
                             <page string="Datos generales" name="general_data">
@@ -79,7 +79,8 @@
                                 </div>
                             </page>
                             <field name="validation_guide" invisible="1"/>
-                            <!-- Para cotizar-->
+                            
+                            <!-- Para seleccionar un mensajero de la cotización-->
                             <page string="Cotizar" name="quote">
                                 <group name="selection_couriers">
                                     <group string="Mensajeros de Pakke" name="pakke_messengers">
@@ -102,13 +103,7 @@
                                         </tree>
                                     </field>
                                     <field name="name_orders" invisible="1"/>
-                                    <group name="couriers_enviopack">
-                                        <group string="Mensajeros de Enviopack" name="couriers_fields_enviopack">
-            
-                                            <!-- <field name="id_couriers_selection" string="Selecciona un mensajero"/> -->
-                                        
-                                        </group>
-                                    </group>
+                                    
                                 <div class="text-end">
                                     <button name="pdf_shipping_guide" invisible="validation_guide" type="object" string="Generar Guia" class="oe_highlight mt-2 btn-lg"></button>
                                     <field name="validation_guide" invisible="1"/>
