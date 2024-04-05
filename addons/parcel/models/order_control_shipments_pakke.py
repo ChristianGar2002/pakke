@@ -201,8 +201,19 @@ class order_control_shipments_pakke(models.Model):
             #Se realiza la petición
             response = requests.post(url, headers=headers, data=json_body)
             
-            #Si la petición es correcta
-            quotes_data = response.json()#Obtengo la respuesta de la peticion
+            if response.status_code == 200:#Para vericar que que la petición se ha correcta
+
+                #Si la petición es correcta
+                quotes_data = response.json()#Obtengo la respuesta de la peticion
+
+            else:
+
+                raise ValidationError((f"No se pudo realizar la cotización, error {response.status_code}")) 
+            
+            #Buscar las cotizaciones relacionadas del name_shipments
+            quotes_to_delete = self.env['parcel.couriers_quote_pakke'].search([('name_shipments', '=', name_shipments)])
+            #Eliminarlas para colocar nuevas
+            quotes_to_delete.unlink()
             
             # Itera sobre los datos de la cotizacion de la api de pakke, y capturar sus datos
             for quote_data in quotes_data['Pakke']:  
@@ -373,8 +384,15 @@ class order_control_shipments_pakke(models.Model):
 
             #Se realiza la petición
             response = requests.post(url, headers=headers, data=json_body)
-                
-            ShipmentId = response.json()#Obtengo la respuesta de la peticion
+            
+            if response.status_code == 200:#Para vericar que que la petición se ha correcta
+
+                #Si la petición es correcta
+                ShipmentId = response.json()#Obtengo la respuesta de la peticion
+
+            else:
+
+                raise ValidationError((f"No se pudo crear la guia de envio, error {response.status_code}")) 
             
             # _logger.info(f"Id del envio{ShipmentId['ShipmentId']}")
             
@@ -395,8 +413,15 @@ class order_control_shipments_pakke(models.Model):
         
         try:
             response = requests.get(url, headers=headers)  # Realiza la solicitud a la API
-                
-            data_pdf_shipping_guide = response.json()  # Obtiene los datos de los estados de la respuesta de la API
+            
+            if response.status_code == 200:#Para vericar que que la petición se ha correcta
+
+                #Si la petición es correcta
+                data_pdf_shipping_guide = response.json()  # Obtiene los datos de los estados de la respuesta de la API
+
+            else:
+
+                raise ValidationError((f"No se pudo obtener la guia de envio, error {response.status_code}")) 
             
             # _logger.info(f"PDF{data_pdf_shipping_guide['data']}")
             
